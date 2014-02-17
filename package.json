@@ -1,6 +1,7 @@
 {
   "name": "leankit-client",
   "description": "API client for use with LeanKit Kanban.",
+  "readme": "https://github.com/LeanKit/leankit-node-client/blob/master/README.md",
   "keywords": [
     "leankit",
     "api",
@@ -16,11 +17,16 @@
   "version": "0.1.0",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
-    "url": "https://github.com/LeanKit/leankit-node-client/issues"
+    "url": "https://github.com/LeanKit/leankit-node-client/issues",
+    "email":"support@leankit.com"
   },
   "author": "David Neal <david.neal@leankit.com>",
   "contributors": [
-    "David Neal"
+    {
+      "name": "David Neal",
+      "email": "david.neal@leankit.com",
+      "url": "http://reverentgeek.com"
+    }
   ],
   "engines": {
     "node": "*"
