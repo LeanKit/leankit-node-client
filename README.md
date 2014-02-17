@@ -21,7 +21,7 @@ The LeanKit client module for Node.js provides an easy-to-use set of functions d
 * Clone or download the `leankit-node-client` Github repository.
 * Open a Terminal window, change to the repository folder, and install dependent packages.
 
-	npm install
+		npm install
 
 * Create a folder in your node application's `node_modules` folder named `leankit-client` (e.g. `[project-name]/node_modules/leankit-client).
 * Copy all the files and folders in the `leankit-node-client` folder to the `leankit-client` folder created in the previous step. 
@@ -40,19 +40,19 @@ Next, compile the LeanKit client module using:
 
 * Set environment variables for the LeanKit account you wish to test with
 
-	export LEANKIT_ACCOUNT=[your-account-name]
-	export LEANKIT_EMAIL=[your@email.com]
-	export LEANKIT_PASSWORD=[your-p@ssw0rd]
-	export LEANKIT_TEST_BOARD=[name-of-your-test-board]
+		export LEANKIT_ACCOUNT=[your-account-name]
+		export LEANKIT_EMAIL=[your@email.com]
+		export LEANKIT_PASSWORD=[your-p@ssw0rd]
+		export LEANKIT_TEST_BOARD=[name-of-your-test-board]
 
 * Install [Mocha](http://visionmedia.github.io/mocha/)
 
-	npm install -g mocha
+		npm install -g mocha
 
 * Open Terminal and change to the LeanKit Node Client directory
 * Run Mocha, specifying a reporter
 
-	mocha --reporter spec
+		mocha --reporter spec
 
 ### Questions?
 
