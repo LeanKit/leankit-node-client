@@ -7,7 +7,11 @@ The LeanKit client module for Node.js provides an easy-to-use set of functions d
 * [Node.js](http://nodejs.org)
 * A [LeanKit](http://leankit.com) account
 
-### Client Usage
+### Installing the client
+
+	npm install leankit-client
+
+### Client usage
 
 	var LeanKitClient = require('leankit-client');
 	var client = LeanKitClient.newClient('account-name', 'your@email.com', 'your-p@ssw0rd');
@@ -15,6 +19,8 @@ The LeanKit client module for Node.js provides an easy-to-use set of functions d
 	client.getBoards(function(err, res){
 		console.log(res);
 	});
+
+Review the [tests](https://github.com/LeanKit/leankit-node-client/blob/master/test/client-tests.js) for a full list of client functions and how to use them.
 
 ### Installing Manually
 
