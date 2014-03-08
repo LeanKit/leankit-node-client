@@ -46,12 +46,21 @@ Next, compile the LeanKit client module using:
 
 * Set environment variables for the LeanKit account you wish to test with. Your test board MUST include the default lanes 'ToDo', 'Doing', and 'Done'.
 
-		export LEANKIT_ACCOUNT=[your-account-name]
-		export LEANKIT_EMAIL=[your@email.com]
-		export LEANKIT_PASSWORD=[your-p@ssw0rd]
-		export LEANKIT_TEST_BOARD=[name-of-your-test-board]
+	**OSX/Linux**
+
+		export LEANKIT_ACCOUNT=your-account-name
+		export LEANKIT_EMAIL=your@email.com
+		export LEANKIT_PASSWORD=your-p@ssw0rd
+		export LEANKIT_TEST_BOARD=name-of-your-test-board
+
+	**Windows**
 		
-	Note: on Windows, use 'set' instead of 'export'.
+		setx LEANKIT_ACCOUNT "your-account-name"
+		setx LEANKIT_EMAIL "your@email.com"
+		setx LEANKIT_PASSWORD "your-p@ssw0rd"
+		setx LEANKIT_TEST_BOARD "name-of-your-test-board"
+
+	Note: On Windows, you will need to reopen your command prompt after setting environment variables.
 
 * Install [Mocha](http://visionmedia.github.io/mocha/)
 
