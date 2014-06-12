@@ -2,8 +2,8 @@ var _ = require('lodash');
 var assert = require('assert');
 var should = require('should');
 var LeanKitClient = require('../leankit-client');
-var accountName = process.env.LEANKIT_ACCOUNT || 'your-account-name', 
-	email = process.env.LEANKIT_EMAIL || 'your@email.com', 
+var accountName = process.env.LEANKIT_ACCOUNT || 'your-account-name',
+	email = process.env.LEANKIT_EMAIL || 'your@email.com',
 	pwd = process.env.LEANKIT_PASSWORD || 'p@ssw0rd';
 
 describe('LeanKitClient', function(){
@@ -46,7 +46,7 @@ describe('LeanKitClient', function(){
 				boards = res;
 				boards.length.should.be.above(0);
 				done();
-			});			
+			});
 		});
 	});
 
@@ -55,7 +55,7 @@ describe('LeanKitClient', function(){
 			client.getNewBoards(function(err, res) {
 				res.length.should.be.above(0);
 				done();
-			});		
+			});
 		});
 	});
 
@@ -125,7 +125,7 @@ describe('LeanKitClient', function(){
 
 			var lane = _.find(boardIdentifiers.Lanes, { 'Name': 'ToDo' });
 			lane.Id.should.be.above(0);
-			
+
 			var cardType = _.find(boardIdentifiers.CardTypes, { 'Name': 'Task'});
 			cardType.Id.should.be.above(0);
 
@@ -185,6 +185,9 @@ describe('LeanKitClient', function(){
 	describe('getCardByExternalId()', function(){
 		it('should return the test card', function(done){
 			client.getCardByExternalId(board.Id, testCard.ExternalCardId, function(err, res) {
+				// console.log(res);
+				should.not.exist(err);
+				should.exist(res);
 				// getCardByExternalId returns an array
 				res.length.should.equal(1);
 				var card = res[0];
@@ -317,8 +320,8 @@ describe('LeanKitClient', function(){
 		});
 	});
 
-	describe('addTask()', function() {
-		it('should add a task to a card taskboard', function(done){
+	describe('Task boards and task cards', function() {
+		it('addTask() should add a task to a card taskboard', function(done){
 			taskCard = _.clone(testCard);
 			taskCard.Id = 0;
 			taskCard.Title = "Task Card 1";
@@ -331,22 +334,19 @@ describe('LeanKitClient', function(){
 				done();
 			});
 		});
-	});
 
-	describe('getTaskboard()', function() {
-		it('should get the card taskboard', function(done){
+		it('getTaskboard() should get the card taskboard', function(done){
 			client.getTaskboard(board.Id, testCard.Id, function(err, res){
 				taskBoard = res;
 				taskBoard.Id.should.be.above(0);
 				taskBoard.Lanes.length.should.equal(3);
 				taskCard = taskBoard.Lanes[0].Cards[0];
+				// console.log(taskBoard);
 				done();
 			});
 		});
-	});
 
-	describe('updateTask()', function() {
-		it('should update a task on a card taskboard', function(done){
+		it('updateTask() should update a task on a card taskboard', function(done){
 			taskCard.Title = 'Updated task 1';
 
 			client.updateTask(board.Id, testCard.Id, taskCard, function(err, res){
@@ -354,10 +354,8 @@ describe('LeanKitClient', function(){
 				done();
 			});
 		});
-	});
 
-	describe('moveTask()', function() {
-		it('should move a task on a card taskboard', function(done){
+		it('moveTask() should move a task on a card taskboard', function(done){
 			var lane = _.find(taskBoard.Lanes, { Index : 1 });
 			var position = 0;
 			client.moveTask(board.Id, testCard.Id, taskCard.Id, lane.Id, position, function(err, res){
@@ -365,20 +363,13 @@ describe('LeanKitClient', function(){
 				done();
 			});
 		});
-	});
 
-	describe('deleteTask()', function() {
-		it('should delete a task on a card taskboard', function(done){
-			client.deleteTask(board.Id, testCard.Id, taskCard.Id, function(err, res){
-				res.ReplyCode.should.equal(203);
-				done();
-			});
-		});
-	});
-
-	describe('getTaskBoardUpdates()', function() {
-		it('should get the latest taskboard', function(done){
+		it('getTaskBoardUpdates() should get the latest taskboard', function(done){
 			client.getTaskBoardUpdates(board.Id, testCard.Id, 0, function(err, res){
+				// console.log(err);
+				// console.log(res);
+				should.not.exist(err);
+				should.exist(res);
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above(0);
 				res.Events.length.should.be.above(0);
@@ -386,6 +377,14 @@ describe('LeanKitClient', function(){
 				done();
 			});
 		});
+
+		it('deleteTask() should delete a task on a card taskboard', function(done){
+			client.deleteTask(board.Id, testCard.Id, taskCard.Id, function(err, res){
+				res.ReplyCode.should.equal(203);
+				done();
+			});
+		});
+
 	});
 
 	describe('searchCards()', function() {
@@ -485,5 +484,3 @@ describe('LeanKitClient', function(){
 
 
 });
-
-
