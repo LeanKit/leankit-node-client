@@ -23,8 +23,11 @@
 
   defaultWipOverrideReason = "WIP Override performed by external system";
 
-  exports.newClient = function(account, email, password) {
-    return new exports.LeanKitClient(account, email, password);
+  exports.newClient = function(account, email, password, options) {
+    if (options == null) {
+      options = {};
+    }
+    return new exports.LeanKitClient(account, email, password, options);
   };
 
   exports.LeanKitClient = (function() {
@@ -32,11 +35,12 @@
 
     boardIdentifiers = {};
 
-    function LeanKitClient(account, email, password) {
+    function LeanKitClient(account, email, password, options) {
       this.account = account;
       this.email = email;
       this.password = password;
-      this.client = request.newClient('https://' + this.account + '.leankit.com/kanban/api/');
+      this.options = options != null ? options : {};
+      this.client = request.newClient('https://' + this.account + '.leankit.com/kanban/api/', this.options);
       this.client.setBasicAuth(this.email, this.password);
     }
 

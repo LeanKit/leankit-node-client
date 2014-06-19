@@ -2,11 +2,11 @@ _ = require 'lodash'
 request = require 'request-json'
 
 parseReplyData = (error, response, callback, cacheCallback) ->
-	if error 
+	if error
 		callback error, response
-	else if response && response.ReplyCode != 200 && response.ReplyCode != 201 
+	else if response && response.ReplyCode != 200 && response.ReplyCode != 201
 		callback error, response
-	else if response.ReplyData && response.ReplyData.length > 0 
+	else if response.ReplyData && response.ReplyData.length > 0
 		if cacheCallback then cacheCallback response.ReplyData[0]
 		callback error, response.ReplyData[0]
 	else
@@ -14,14 +14,14 @@ parseReplyData = (error, response, callback, cacheCallback) ->
 
 defaultWipOverrideReason = "WIP Override performed by external system"
 
-exports.newClient = (account, email, password) -> new exports.LeanKitClient account, email, password
+exports.newClient = (account, email, password, options = {}) -> new exports.LeanKitClient account, email, password, options
 
 
 class exports.LeanKitClient
 	boardIdentifiers = {}
 
-	constructor: (@account, @email, @password) ->
-		@client = request.newClient('https://' + @account + '.leankit.com/kanban/api/')
+	constructor: (@account, @email, @password, @options = {}) ->
+		@client = request.newClient('https://' + @account + '.leankit.com/kanban/api/', @options)
 		@client.setBasicAuth @email, @password
 
 	getBoards: (callback) ->
@@ -49,7 +49,7 @@ class exports.LeanKitClient
 				callback err, null
 
 	getBoardIdentifiers: (boardId, callback) ->
-		if boardId of boardIdentifiers 
+		if boardId of boardIdentifiers
 			# console.log 'Using cached version'
 			callback null, boardIdentifiers[boardId]
 		@client.get 'board/' + boardId + '/GetBoardIdentifiers', (err, res, body) ->
@@ -58,11 +58,11 @@ class exports.LeanKitClient
 
 	getBoardBacklogLanes: (boardId, callback) ->
 		@client.get 'board/' + boardId + '/backlog', (err, res, body) ->
-			parseReplyData err, body, callback			
+			parseReplyData err, body, callback
 
 	getBoardArchiveLanes: (boardId, callback) ->
 		@client.get 'board/' + boardId + '/archive', (err, res, body) ->
-			parseReplyData err, body, callback			
+			parseReplyData err, body, callback
 
 	getBoardArchiveCards: (boardId, callback) ->
 		@client.get 'board/' + boardId + '/archivecards', (err, res, body) ->
@@ -191,5 +191,3 @@ class exports.LeanKitClient
 	moveTask: (boardId, cardId, taskId, toLaneId, position, callback) ->
 		@client.post 'v1/board/' + boardId + '/move/card/' + cardId + '/tasks/' + taskId + '/lane/' + toLaneId + '/position/' + position, null, (err, res, body) ->
 			parseReplyData err, body, callback
-
-
