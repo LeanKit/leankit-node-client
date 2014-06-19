@@ -1,0 +1,5 @@
+*.coffee
+.git*
+.project
+cakefile
+test/*.js
