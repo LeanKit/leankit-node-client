@@ -1,6 +1,6 @@
 ## LeanKit Node Client
 
-The LeanKit client module for Node.js provides an easy-to-use set of functions designed to simplify the integration of external systems and utilities with your LeanKit account. 
+The LeanKit client module for Node.js provides an easy-to-use set of functions designed to simplify the integration of external systems and utilities with your LeanKit account.
 
 ### Requirements
 
@@ -22,6 +22,15 @@ The LeanKit client module for Node.js provides an easy-to-use set of functions d
 
 Review the [tests](https://github.com/LeanKit/leankit-node-client/blob/master/test/client-tests.js) for a full list of client functions and how to use them.
 
+### Proxy support
+
+To use the LeanKit client behind a proxy server, pass an options object to the module constructor that includes the proxy server. For example:
+
+	var LeanKitClient = require('leankit-client');
+	var client = LeanKitClient.newClient('account-name', 'your@email.com', 'your-p@ssw0rd', { 'proxy': 'http://localproxy.com' } );
+
+This options object is the same object used by the [request module](https://github.com/mikeal/request#requestoptions-callback).
+
 ### Installing Manually
 
 * Clone or download the `leankit-node-client` Github repository.
@@ -30,7 +39,7 @@ Review the [tests](https://github.com/LeanKit/leankit-node-client/blob/master/te
 		npm install
 
 * Create a folder in your node application's `node_modules` folder named `leankit-client` (e.g. `[project-name]/node_modules/leankit-client).
-* Copy all the files and folders in the `leankit-node-client` folder to the `leankit-client` folder created in the previous step. 
+* Copy all the files and folders in the `leankit-node-client` folder to the `leankit-client` folder created in the previous step.
 
 ### Compiling leankit-client.js
 
@@ -54,7 +63,7 @@ Next, compile the LeanKit client module using:
 		export LEANKIT_TEST_BOARD=name-of-your-test-board
 
 	**Windows**
-		
+
 		setx LEANKIT_ACCOUNT "your-account-name"
 		setx LEANKIT_EMAIL "your@email.com"
 		setx LEANKIT_PASSWORD "your-p@ssw0rd"
