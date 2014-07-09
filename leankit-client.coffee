@@ -12,6 +12,15 @@ parseReplyData = (error, response, callback, cacheCallback) ->
 	else
 		callback error, response
 
+parseBody =  (body) ->
+	if typeof body is "string" and body isnt ""
+		try
+			parsed = JSON.parse body
+		catch err
+			parsed = body
+	else parsed = body
+	parsed
+
 defaultWipOverrideReason = "WIP Override performed by external system"
 
 exports.newClient = (account, email, password, options = {}) -> new exports.LeanKitClient account, email, password, options
@@ -21,7 +30,11 @@ class exports.LeanKitClient
 	boardIdentifiers = {}
 
 	constructor: (@account, @email, @password, @options = {}) ->
-		@client = request.newClient('https://' + @account + '.leankit.com/kanban/api/', @options)
+		url = 'https://' + @account + '.leankit.com/kanban/api/'
+		# if @account is 'kanban-cibuild'
+		# 	url = 'http://kanban-cibuild.localkanban.com/kanban/api/'
+
+		@client = request.newClient(url, @options)
 		@client.setBasicAuth @email, @password
 
 	getBoards: (callback) ->
@@ -191,3 +204,12 @@ class exports.LeanKitClient
 	moveTask: (boardId, cardId, taskId, toLaneId, position, callback) ->
 		@client.post 'v1/board/' + boardId + '/move/card/' + cardId + '/tasks/' + taskId + '/lane/' + toLaneId + '/position/' + position, null, (err, res, body) ->
 			parseReplyData err, body, callback
+
+	addAttachment: (boardId, cardId, description, file, callback) ->
+		attachmentData =
+			Id: 0
+			Description: description
+
+		@client.sendFile 'card/SaveAttachment/' + boardId + '/' + cardId, file, attachmentData, (err, res, body) ->
+			parsed = parseBody body
+			parseReplyData err, parsed, callback
