@@ -57,6 +57,9 @@
       this.password = password;
       this.options = options != null ? options : {};
       url = 'https://' + this.account + '.leankit.com/kanban/api/';
+      if (this.account === 'kanban-cibuild') {
+        url = 'http://kanban-cibuild.localkanban.com/kanban/api/';
+      }
       this.client = request.newClient(url, this.options);
       this.client.setBasicAuth(this.email, this.password);
     }
@@ -319,6 +322,36 @@
     LeanKitClient.prototype.moveTask = function(boardId, cardId, taskId, toLaneId, position, callback) {
       return this.client.post('v1/board/' + boardId + '/move/card/' + cardId + '/tasks/' + taskId + '/lane/' + toLaneId + '/position/' + position, null, function(err, res, body) {
         return parseReplyData(err, body, callback);
+      });
+    };
+
+    LeanKitClient.prototype.getAttachmentCount = function(boardId, cardId, callback) {
+      return this.client.get('card/GetAttachmentsCount/' + boardId + '/' + cardId, function(err, res, body) {
+        return parseReplyData(err, body, callback);
+      });
+    };
+
+    LeanKitClient.prototype.getAttachments = function(boardId, cardId, callback) {
+      return this.client.get('card/GetAttachments/' + boardId + '/' + cardId, function(err, res, body) {
+        return parseReplyData(err, body, callback);
+      });
+    };
+
+    LeanKitClient.prototype.getAttachment = function(boardId, cardId, attachmentId, callback) {
+      return this.client.get('card/GetAttachments/' + boardId + '/' + cardId + '/' + attachmentId, function(err, res, body) {
+        return parseReplyData(err, body, callback);
+      });
+    };
+
+    LeanKitClient.prototype.downloadAttachment = function(boardId, attachmentId, callback) {
+      return this.client.saveFileAsStream('card/DownloadAttachment/' + boardId + '/' + attachmentId, function(err, res, body) {
+        return callback(err, body);
+      });
+    };
+
+    LeanKitClient.prototype.deleteAttachment = function(boardId, cardId, attachmentId, callback) {
+      return this.client.saveFileAsStream('card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, function(err, res, body) {
+        return callback(err, body);
       });
     };
 

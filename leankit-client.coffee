@@ -31,8 +31,8 @@ class exports.LeanKitClient
 
 	constructor: (@account, @email, @password, @options = {}) ->
 		url = 'https://' + @account + '.leankit.com/kanban/api/'
-		# if @account is 'kanban-cibuild'
-		# 	url = 'http://kanban-cibuild.localkanban.com/kanban/api/'
+		if @account is 'kanban-cibuild'
+			url = 'http://kanban-cibuild.localkanban.com/kanban/api/'
 
 		@client = request.newClient(url, @options)
 		@client.setBasicAuth @email, @password
@@ -204,6 +204,26 @@ class exports.LeanKitClient
 	moveTask: (boardId, cardId, taskId, toLaneId, position, callback) ->
 		@client.post 'v1/board/' + boardId + '/move/card/' + cardId + '/tasks/' + taskId + '/lane/' + toLaneId + '/position/' + position, null, (err, res, body) ->
 			parseReplyData err, body, callback
+
+	getAttachmentCount: (boardId, cardId, callback) ->
+		@client.get 'card/GetAttachmentsCount/' + boardId + '/' + cardId, (err, res, body) ->
+			parseReplyData err, body, callback
+
+	getAttachments: (boardId, cardId, callback) ->
+		@client.get 'card/GetAttachments/' + boardId + '/' + cardId, (err, res, body) ->
+			parseReplyData err, body, callback
+
+	getAttachment: (boardId, cardId, attachmentId, callback) ->
+		@client.get 'card/GetAttachments/' + boardId + '/' + cardId + '/' + attachmentId, (err, res, body) ->
+			parseReplyData err, body, callback
+
+	downloadAttachment: (boardId, attachmentId, callback) ->
+		@client.saveFileAsStream 'card/DownloadAttachment/' + boardId + '/' + attachmentId, (err, res, body) ->
+			callback err, body
+
+	deleteAttachment: (boardId, cardId, attachmentId, callback) ->
+		@client.saveFileAsStream 'card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, (err, res, body) ->
+			callback err, body
 
 	addAttachment: (boardId, cardId, description, file, callback) ->
 		attachmentData =

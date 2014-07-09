@@ -32,7 +32,8 @@ var client = {},
 		UserWipOverrideComment: 'Because...'
 	},
 	taskBoard = {},
-	taskCard = {};
+	taskCard = {},
+	attachment = {};
 
 	if (accountName !== 'kanban-cibuild') {
 		client = LeanKitClient.newClient(accountName, email, pwd);
@@ -117,13 +118,6 @@ describe('LeanKitClient', function(){
 	});
 
 	describe('Card API', function() {
-		before(function() {
-			fs.writeFile('./test/testfile.txt', 'test file');
-		});
-
-		after(function() {
-			fs.unlink('./test/testfile.txt');
-		});
 
 		it('should add a card to the first active lane without error', function(done) {
 			should.exist(board);
@@ -318,7 +312,19 @@ describe('LeanKitClient', function(){
 			});
 		});
 
-		it('should add attachment without error', function(done){
+	});
+
+	describe.skip('Card Attachments API', function() {
+
+		before(function() {
+			fs.writeFile('./test/testfile.txt', 'test file');
+		});
+
+		after(function() {
+			fs.unlink('./test/testfile.txt');
+		});
+
+		it('should add attachment without error', function(done) {
 			testCard.Id.should.be.above(0);
 			var file = fs.createReadStream('./test/testfile.txt');
 			client.addAttachment(board.Id, testCard.Id, 'Test Attachment', file, function(err, res) {
@@ -326,9 +332,61 @@ describe('LeanKitClient', function(){
 				should.exist(res);
 				res.should.have.property('ReplyCode');
 				res.ReplyCode.should.equal(202);
+				// console.log(res);
 				done();
 			});
 		});
+
+		it('should get attachments without error', function(done) {
+			testCard.Id.should.be.above(0);
+			client.getAttachments(board.Id, testCard.Id, function(err, res) {
+				should.not.exist(err);
+				should.exist(res);
+				// console.log(res);
+				res.should.be.instanceOf(Array);
+				res.length.should.be.above(0);
+				res[0].should.have.property('FileName');
+				res[0].should.have.property('Description');
+				attachment = res[0];
+				done();
+			});
+		});
+
+		it('should get attachment count without error', function(done) {
+			testCard.Id.should.be.above(0);
+			client.getAttachmentCount(board.Id, testCard.Id, function(err, res) {
+				should.not.exist(err);
+				should.exist(res);
+				res.should.be.above(0);
+				// console.log(res);
+				done();
+			});
+		});
+
+		it('should download attachment without error', function(done) {
+			should.exist(attachment);
+			attachment.should.have.property('Id');
+			client.downloadAttachment(board.Id, attachment.Id, function(err, res) {
+				should.not.exist(err);
+				should.exist(res);
+				res.should.equal('')
+				// console.log(res);
+				done();
+			});
+		});
+
+		it.skip('should delete attachment without error', function(done) {
+			should.exist(attachment);
+			attachment.should.have.property('Id');
+			client.deleteAttachment(board.Id, attachment.Id, function(err, res) {
+				should.not.exist(err);
+				should.exist(res);
+				res.should.equal('')
+				// console.log(res);
+				done();
+			});
+		});
+
 	});
 
 	describe('Task Board/Card API', function() {
@@ -404,8 +462,8 @@ describe('LeanKitClient', function(){
 
 	});
 
-	describe('searchCards()', function() {
-		it('should get cards without error', function(done){
+	describe('Search API', function() {
+		it('searchCards() should get cards without error', function(done){
 			var searchOptions = {
 				IncludeArchiveOnly: false,
 				IncludeBacklogOnly: false,
