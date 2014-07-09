@@ -222,8 +222,8 @@ class exports.LeanKitClient
 			callback err, body
 
 	deleteAttachment: (boardId, cardId, attachmentId, callback) ->
-		@client.saveFileAsStream 'card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, (err, res, body) ->
-			callback err, body
+		@client.post 'card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, null, (err, res, body) ->
+			parseReplyData err, body, callback
 
 	addAttachment: (boardId, cardId, description, file, callback) ->
 		attachmentData =

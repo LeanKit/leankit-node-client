@@ -350,8 +350,8 @@
     };
 
     LeanKitClient.prototype.deleteAttachment = function(boardId, cardId, attachmentId, callback) {
-      return this.client.saveFileAsStream('card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, function(err, res, body) {
-        return callback(err, body);
+      return this.client.post('card/DeleteAttachment/' + boardId + '/' + cardId + '/' + attachmentId, null, function(err, res, body) {
+        return parseReplyData(err, body, callback);
       });
     };
 

@@ -352,6 +352,21 @@ describe('LeanKitClient', function(){
 			});
 		});
 
+		it('should get attachment by ID without error', function(done) {
+			testCard.Id.should.be.above(0);
+			should.exist(attachment);
+			attachment.should.have.property('Id');
+			client.getAttachment(board.Id, testCard.Id, attachment.Id, function(err, res) {
+				should.not.exist(err);
+				should.exist(res);
+				// console.log(res);
+				res.should.have.property('Id');
+				res.should.have.property('FileName');
+				res.should.have.property('Description');
+				done();
+			});
+		});
+
 		it('should get attachment count without error', function(done) {
 			testCard.Id.should.be.above(0);
 			client.getAttachmentCount(board.Id, testCard.Id, function(err, res) {
@@ -369,20 +384,21 @@ describe('LeanKitClient', function(){
 			client.downloadAttachment(board.Id, attachment.Id, function(err, res) {
 				should.not.exist(err);
 				should.exist(res);
-				res.should.equal('')
+				res.should.equal('test file')
 				// console.log(res);
 				done();
 			});
 		});
 
-		it.skip('should delete attachment without error', function(done) {
+		it('should delete attachment without error', function(done) {
 			should.exist(attachment);
 			attachment.should.have.property('Id');
-			client.deleteAttachment(board.Id, attachment.Id, function(err, res) {
+			client.deleteAttachment(board.Id, testCard.Id, attachment.Id, function(err, res) {
 				should.not.exist(err);
 				should.exist(res);
-				res.should.equal('')
 				// console.log(res);
+				res.should.have.property('ReplyCode');
+				res.ReplyCode.should.equal(203);
 				done();
 			});
 		});
