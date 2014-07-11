@@ -33,7 +33,7 @@
   },
   "main": "./leankit-client.js",
   "dependencies": {
-    "request-json": "0.4.6",
+    "request-json": "~0.4.11",
     "lodash": "2.4.*"
   },
   "devDependencies": {

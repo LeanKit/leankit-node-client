@@ -53,7 +53,7 @@ Next, compile the LeanKit client module using:
 
 ### Running Tests
 
-* Set environment variables for the LeanKit account you wish to test with. Your test board MUST include the default lanes 'ToDo', 'Doing', and 'Done'.
+* Set environment variables for the LeanKit account you wish to test with.
 
 	**OSX/Linux**
 
