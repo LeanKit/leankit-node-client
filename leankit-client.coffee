@@ -163,10 +163,6 @@ class exports.LeanKitClient
 		@client.post 'board/' + boardId + '/searchcards', options, (err, res, body) ->
 			parseReplyData err, body, callback
 
-	searchCards: (boardId, options, callback) ->
-		@client.post 'board/' + boardId + '/searchcards', options, (err, res, body) ->
-			parseReplyData err, body, callback
-
 	getNewCards: (boardId, callback) ->
 		@client.get 'board/' + boardId + '/listnewcards', (err, res, body) ->
 			parseReplyData err, body, callback
