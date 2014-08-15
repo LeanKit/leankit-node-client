@@ -263,12 +263,6 @@
       });
     };
 
-    LeanKitClient.prototype.searchCards = function(boardId, options, callback) {
-      return this.client.post('board/' + boardId + '/searchcards', options, function(err, res, body) {
-        return parseReplyData(err, body, callback);
-      });
-    };
-
     LeanKitClient.prototype.getNewCards = function(boardId, callback) {
       return this.client.get('board/' + boardId + '/listnewcards', function(err, res, body) {
         return parseReplyData(err, body, callback);
