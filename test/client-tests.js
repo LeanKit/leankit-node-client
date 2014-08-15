@@ -314,7 +314,7 @@ describe('LeanKitClient', function(){
 
 	});
 
-	describe.skip('Card Attachments API', function() {
+	describe('Card Attachments API', function() {
 
 		before(function() {
 			fs.writeFile('./test/testfile.txt', 'test file');
