@@ -229,3 +229,8 @@ class exports.LeanKitClient
 		@client.sendFile 'card/SaveAttachment/' + boardId + '/' + cardId, file, attachmentData, (err, res, body) ->
 			parsed = parseBody body
 			parseReplyData err, parsed, callback
+
+	createIntegrationBoard: ( templateName, hyperlinkTemplate, prefix, title, callback ) ->
+		data = { templateName: templateName, hyperlinkTemplate: hyperlinkTemplate, prefix: prefix, title:title }
+		@client.post 'createIntegrationBoard', data, (err, res, body) ->
+			parseReplyData err, body, callback
