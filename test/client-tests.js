@@ -38,8 +38,9 @@ var client = {},
 	if (accountName !== 'kanban-cibuild') {
 		client = LeanKitClient.newClient(accountName, email, pwd);
 	} else {
-		process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-		client = LeanKitClient.newClient(accountName, email, pwd, { 'proxy': 'http://127.0.0.1:8888' });
+		// process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+		// client = LeanKitClient.newClient(accountName, email, pwd, { 'proxy': 'http://127.0.0.1:8888' });
+		client = LeanKitClient.newClient(accountName, email, pwd );
 	}
 
 describe('LeanKitClient', function(){
@@ -115,6 +116,7 @@ describe('LeanKitClient', function(){
 				done();
 			});
 		});
+
 	});
 
 	describe('Card API', function() {
@@ -568,6 +570,72 @@ describe('LeanKitClient', function(){
 				});
 			});
 		});
+	});
+
+	describe( 'Create Integration Board API', function() {
+
+		describe( 'with valid template name and title', function() {
+
+			var error;
+			var result;
+
+			before( function( done ) {
+
+				// NOTE:
+				// the following properties cannot be tested via this client api
+				// because not all board properties are available via the api
+				// these are included for documentation purposes
+
+				var hyperlinkTemplate = "http://www.google.com/#q={ID}";
+				var prefix = "google ";
+
+				client.createIntegrationBoard( "Default Board", hyperlinkTemplate, prefix, "My Test Board", function( err, res ) {
+					error = err;
+					result = res;
+					done();
+				} );
+			});
+
+			it( 'creates a board using template specified', function() {
+				result.Title.indexOf("My Test Board").should.equal(0);
+			});
+
+		})
+
+		describe( 'with invalid template name and title', function() {
+
+			var error;
+			var result;
+
+			before( function( done ) {
+				client.createIntegrationBoard( "invalid template", null, null, null, function( err, res ) {
+					result = res;
+					done();
+				} );
+			});
+
+			it( 'ReplyCode is 503', function() {
+				result.ReplyCode.should.equal(503);
+			});	
+
+		})
+		describe( 'with all null params', function() {
+
+			var error;
+			var result;
+
+			before( function( done ) {
+				client.createIntegrationBoard( null, null, null, null, function( err, res ) {
+					result = res;
+					done();
+				} );
+			});
+
+			it( 'Title starts with untitled board', function() {
+				result.Title.indexOf('untitled board').should.equal(0);
+			});
+
+		})
 	});
 
 });
