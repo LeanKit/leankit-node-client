@@ -3,3 +3,4 @@
 .project
 cakefile
 test/*.js
+coffeelint.json
