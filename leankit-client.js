@@ -58,16 +58,20 @@
 
     function LeanKitClient(account, email, password, options) {
       var url;
-      this.account = account;
-      this.email = email;
-      this.password = password;
-      this.options = options != null ? options : {};
-      url = 'https://' + this.account + '.leankit.com/kanban/api/';
-      if (this.account === 'kanban-cibuild') {
+      if (options == null) {
+        options = {};
+      }
+      url = 'https://' + account + '.leankit.com/kanban/api/';
+      if (account === 'kanban-cibuild') {
         url = 'http://kanban-cibuild.localkanban.com/kanban/api/';
       }
-      this.client = request.newClient(url, this.options);
-      this.client.setBasicAuth(this.email, this.password);
+      if (password == null) {
+        options = email || {};
+      }
+      this.client = request.newClient(url, options);
+      if (password != null) {
+        this.client.setBasicAuth(email, password);
+      }
     }
 
     LeanKitClient.prototype.getBoards = function(callback) {
