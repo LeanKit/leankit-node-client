@@ -1,3 +1,4 @@
+path = require 'path'
 _ = require 'lodash'
 request = require 'request-json'
 
@@ -222,9 +223,14 @@ class exports.LeanKitClient
       parseReplyData err, body, callback
 
   addAttachment: (boardId, cardId, description, file, callback) ->
+    if typeof file is "string"
+      fileName = path.basename file
+    else
+      fileName = path.basename file.path
     attachmentData =
       Id: 0
       Description: description
+      FileName: fileName
 
     @client.sendFile 'card/SaveAttachment/' + boardId + '/' + cardId, file, attachmentData, (err, res, body) ->
       parsed = parseBody body
