@@ -18,7 +18,7 @@
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
-    "email":"support@leankit.com"
+    "email": "support@leankit.com"
   },
   "author": "David Neal <david.neal@leankit.com>",
   "contributors": [
@@ -39,6 +39,7 @@
   "devDependencies": {
     "coffee-script": "*",
     "mocha": "*",
+    "nock": "^0.48.2",
     "should": "*"
   },
   "scripts": {
