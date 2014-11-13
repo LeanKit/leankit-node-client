@@ -3,6 +3,7 @@ var _ = require( 'lodash' );
 var assert = require( 'assert' );
 var should = require( 'should' );
 var LeanKitClient = require( '../leankit-client' );
+var nock = require('nock');
 var accountName = process.env.LEANKIT_ACCOUNT || 'your-account-name',
 	email = process.env.LEANKIT_EMAIL || 'your@email.com',
 	pwd = process.env.LEANKIT_PASSWORD || 'p@ssw0rd';
@@ -596,4 +597,35 @@ describe( 'LeanKitClient', function() {
 		} );
 	} );
 
+	describe( 'Errors',function(){
+		var scope;
+		before(function(){
+			var url = accountName === "kanban-cibuild"?
+				"http://kanban-cibuild.localkanban.com":
+				"https://"+accountName+".leankit.com";
+
+			scope = nock(url)
+				.get('/kanban/api/boards')
+				.reply(200,{
+					ReplyData: [ {
+						Resource: 'GET /kanban/api/boards',
+						UserAddress: '127.0.0.1',
+						Headers: {}
+					}],
+					ReplyCode: 503,
+					ReplyText: 'Some useful message here.' });
+		});
+		after(function(){
+			nock.cleanAll();
+		});
+
+		it('should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx',function(done){
+			client.getBoards( function( err, res ) {
+				should.exist( err );
+				should.not.exist( res );
+				err.statusCode.should.equal(503);
+				done();
+			} );
+		});
+	});
 } );

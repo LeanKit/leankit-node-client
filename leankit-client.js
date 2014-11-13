@@ -11,6 +11,10 @@
   parseReplyData = function(error, response, callback, cacheCallback) {
     if (error) {
       return callback(error, response);
+    } else if (response && response.ReplyCode && response.ReplyCode > 399) {
+      error = new Error(response.ReplyText);
+      error.statusCode = response.ReplyCode;
+      return callback(error);
     } else if (response && response.ReplyCode !== 200 && response.ReplyCode !== 201) {
       return callback(error, response);
     } else if (response.ReplyData && response.ReplyData.length > 0) {
