@@ -628,4 +628,24 @@ describe( 'LeanKitClient', function() {
 			} );
 		});
 	});
+	describe( 'Client', function() {
+		it( 'should let you bypass user/pass in favor of headers', function( done ) {
+			var credentials = new Buffer( email + ":" + pwd ).toString( 'base64' );
+			var opts = {
+				headers: {
+					authorization: "Basic " + credentials
+				}
+			};
+
+			var client = LeanKitClient.newClient( accountName, opts );
+
+			client.getBoards( function( err, res ) {
+				should.not.exist( err );
+				should.exist( res );
+				boards = res;
+				boards.length.should.be.above( 0 );
+				done();
+			} );
+		} );
+	} );
 } );

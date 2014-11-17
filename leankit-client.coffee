@@ -34,13 +34,17 @@ exports.newClient = (account, email, password, options = {}) -> new exports.Lean
 class exports.LeanKitClient
   boardIdentifiers = {}
 
-  constructor: (@account, @email, @password, @options = {}) ->
-    url = 'https://' + @account + '.leankit.com/kanban/api/'
-    if @account is 'kanban-cibuild'
+  constructor: (account, email, password, options = {}) ->
+    url = 'https://' + account + '.leankit.com/kanban/api/'
+    if account is 'kanban-cibuild'
       url = 'http://kanban-cibuild.localkanban.com/kanban/api/'
 
-    @client = request.newClient(url, @options)
-    @client.setBasicAuth @email, @password
+    if not password?
+      options = email || {}
+
+    @client = request.newClient(url, options)
+    if password?
+      @client.setBasicAuth email, password
 
   getBoards: (callback) ->
     @client.get 'boards', (err, res, body) ->
