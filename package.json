@@ -14,7 +14,7 @@
       "url": "https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE"
     }
   ],
-  "version": "0.2.5",
+  "version": "0.3.0",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
@@ -33,7 +33,7 @@
   },
   "main": "./leankit-client.js",
   "dependencies": {
-    "request-json": "~0.4.13",
+    "request-json": "~0.5.2",
     "lodash": "2.4.*"
   },
   "devDependencies": {

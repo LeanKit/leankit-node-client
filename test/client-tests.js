@@ -3,7 +3,7 @@ var _ = require( 'lodash' );
 var assert = require( 'assert' );
 var should = require( 'should' );
 var LeanKitClient = require( '../leankit-client' );
-var nock = require('nock');
+var nock = require( 'nock' );
 var accountName = process.env.LEANKIT_ACCOUNT || 'your-account-name',
 	email = process.env.LEANKIT_EMAIL || 'your@email.com',
 	pwd = process.env.LEANKIT_PASSWORD || 'p@ssw0rd';
@@ -345,6 +345,7 @@ describe( 'LeanKitClient', function() {
 
 		after( function() {
 			fs.unlink( './test/testfile.txt' );
+			fs.unlink( './test/download.txt' );
 		} );
 
 		it( 'should add attachment without error', function( done ) {
@@ -404,12 +405,16 @@ describe( 'LeanKitClient', function() {
 		it( 'should download attachment without error', function( done ) {
 			should.exist( attachment );
 			attachment.should.have.property( 'Id' );
-			client.downloadAttachment( board.Id, attachment.Id, function( err, res ) {
+			var fileName = "./test/download.txt";
+			client.downloadAttachment( board.Id, attachment.Id, fileName, function( err, res ) {
 				should.not.exist( err );
 				should.exist( res );
-				res.should.equal( 'test file' );
-				// console.log(res);
-				done();
+				fs.readFile( fileName, 'utf8', function( err, text ) {
+					should.not.exist( err );
+					should.exist( text );
+					text.should.equal( 'test file' );
+					done();
+				} );
 			} );
 		} );
 
@@ -597,37 +602,37 @@ describe( 'LeanKitClient', function() {
 		} );
 	} );
 
-	describe( 'Errors',function(){
+	describe( 'Errors', function() {
 		var scope;
-		before(function(){
-			var url = accountName === "kanban-cibuild"?
-				"http://kanban-cibuild.localkanban.com":
-				"https://"+accountName+".leankit.com";
+		before( function() {
+			var url = accountName === "kanban-cibuild" ?
+				"http://kanban-cibuild.localkanban.com" :
+				"https://" + accountName + ".leankit.com";
 
-			scope = nock(url)
-				.get('/kanban/api/boards')
-				.reply(200,{
+			scope = nock( url )
+				.get( '/kanban/api/boards' )
+				.reply( 200, {
 					ReplyData: [ {
 						Resource: 'GET /kanban/api/boards',
 						UserAddress: '127.0.0.1',
 						Headers: {}
-					}],
+					} ],
 					ReplyCode: 503,
-					ReplyText: 'Some useful message here.' });
-		});
-		after(function(){
+				ReplyText: 'Some useful message here.' } );
+		} );
+		after( function() {
 			nock.cleanAll();
-		});
+		} );
 
-		it('should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx',function(done){
+		it( 'should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx', function( done ) {
 			client.getBoards( function( err, res ) {
 				should.exist( err );
 				should.not.exist( res );
-				err.statusCode.should.equal(503);
+				err.statusCode.should.equal( 503 );
 				done();
 			} );
-		});
-	});
+		} );
+	} );
 	describe( 'Client', function() {
 		it( 'should let you bypass user/pass in favor of headers', function( done ) {
 			var credentials = new Buffer( email + ":" + pwd ).toString( 'base64' );

@@ -222,8 +222,8 @@ class exports.LeanKitClient
     @client.get 'card/GetAttachments/' + boardId + '/' + cardId + '/' + attachmentId, (err, res, body) ->
       parseReplyData err, body, callback
 
-  downloadAttachment: (boardId, attachmentId, callback) ->
-    @client.saveFileAsStream 'card/DownloadAttachment/' + boardId + '/' + attachmentId, (err, res, body) ->
+  downloadAttachment: (boardId, attachmentId, filePath, callback) ->
+    @client.saveFile 'card/DownloadAttachment/' + boardId + '/' + attachmentId, filePath, (err, res, body) ->
       callback err, body
 
   deleteAttachment: (boardId, cardId, attachmentId, callback) ->
