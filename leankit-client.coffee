@@ -42,7 +42,7 @@ class exports.LeanKitClient
     if not password?
       options = email || {}
 
-    @client = request.newClient(url, options)
+    @client = request.createClient(url, options)
     if password?
       @client.setBasicAuth email, password
 

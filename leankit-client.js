@@ -68,7 +68,7 @@
       if (password == null) {
         options = email || {};
       }
-      this.client = request.newClient(url, options);
+      this.client = request.createClient(url, options);
       if (password != null) {
         this.client.setBasicAuth(email, password);
       }
