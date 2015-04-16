@@ -4,3 +4,4 @@
 cakefile
 test/*.js
 coffeelint.json
+*.jshintrc
