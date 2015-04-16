@@ -14,7 +14,7 @@ The LeanKit client module for Node.js provides an easy-to-use set of functions d
 ### Client usage
 
 	var LeanKitClient = require('leankit-client');
-	var client = LeanKitClient.newClient('account-name', 'your@email.com', 'your-p@ssw0rd');
+	var client = LeanKitClient.createClient('account-name', 'your@email.com', 'your-p@ssw0rd');
 
 	client.getBoards(function(err, res){
 		console.log(res);
@@ -27,7 +27,7 @@ Review the [tests](https://github.com/LeanKit/leankit-node-client/blob/master/te
 To use the LeanKit client behind a proxy server, pass an options object to the module constructor that includes the proxy server. For example:
 
 	var LeanKitClient = require('leankit-client');
-	var client = LeanKitClient.newClient('account-name', 'your@email.com', 'your-p@ssw0rd', { 'proxy': 'http://localproxy.com' } );
+	var client = LeanKitClient.createClient('account-name', 'your@email.com', 'your-p@ssw0rd', { 'proxy': 'http://localproxy.com' } );
 
 This options object is the same object used by the [request module](https://github.com/mikeal/request#requestoptions-callback).
 

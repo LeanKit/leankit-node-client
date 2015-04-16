@@ -28,7 +28,7 @@ parseBody =  (body) ->
 
 defaultWipOverrideReason = "WIP Override performed by external system"
 
-exports.newClient = (account, email, password, options = {}) -> new exports.LeanKitClient account, email, password, options
+exports.createClient = (account, email, password, options = {}) -> new exports.LeanKitClient account, email, password, options
 
 
 class exports.LeanKitClient
