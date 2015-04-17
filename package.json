@@ -1,6 +1,6 @@
 {
   "name": "leankit-client",
-  "description": "API client for use with LeanKit Kanban.",
+  "description": "API client for use with LeanKit Kanban",
   "readme": "https://github.com/LeanKit/leankit-node-client/blob/master/README.md",
   "keywords": [
     "leankit",
@@ -37,14 +37,12 @@
     "lodash": "2.4.*"
   },
   "devDependencies": {
-    "coffee-script": "*",
     "mocha": "*",
     "nock": "^0.48.2",
     "should": "*"
   },
   "scripts": {
-    "prepublish": "cake build",
-    "test": "cake tests"
+    "test": "mocha --reporter spec"
   },
   "repository": {
     "type": "git",
