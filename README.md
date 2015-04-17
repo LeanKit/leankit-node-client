@@ -66,9 +66,9 @@ This options object is the same object used by the [request module](https://gith
 		npm install -g mocha
 
 * Open Terminal and change to the LeanKit Node Client directory
-* Run Mocha, specifying a reporter
+* Run tests
 
-		mocha --reporter spec
+		npm test
 
 ### Questions?
 
