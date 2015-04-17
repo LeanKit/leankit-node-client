@@ -36,6 +36,23 @@ var parseBody = function( body ) {
 	return parsed;
 };
 
+var buildUrl = function( account ) {
+	var url = "";
+	if ( account.indexOf( "http://" ) !== 0 && account.indexOf( "https://" ) !== 0 ) {
+		url = "https://" + account;
+		// Assume leankit.com if no domain is specified
+		if ( account.indexOf( "." ) === -1 ) {
+			url += ".leankit.com";
+		}
+	} else {
+		url = account;
+	}
+	if ( url.indexOf( "/", account.length - 1 ) !== 0 ) {
+		url += "/";
+	}
+	return url + "kanban/api/";
+};
+
 var defaultWipOverrideReason = "WIP Override performed by external system";
 
 exports.createClient = function( account, email, password, options ) {
@@ -55,10 +72,8 @@ exports.LeanKitClient = (function() {
 	function LeanKitClient( account, email, password, options ) {
 		options = options || {};
 
-		var url = "https://" + account + ".leankit.com/kanban/api/";
-		if ( account === "kanban-cibuild" ) {
-			url = "http://kanban-cibuild.localkanban.com/kanban/api/";
-		}
+		var url = buildUrl( account );
+
 		this.client = request.createClient( url, options );
 		if ( password ) {
 			this.client.setBasicAuth( email, password );

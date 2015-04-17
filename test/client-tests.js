@@ -651,5 +651,22 @@ describe( "LeanKitClient", function() {
 				done();
 			} );
 		} );
+
+		it ( "builds the correct url from a given account name", function() {
+			var client = LeanKitClient.createClient( "account", "me@mycompany.com", "test" );
+			client.client.host.should.equal( "https://account.leankit.com/kanban/api/" );
+		} );
+
+		it ( "builds the correct url from a given account domain name", function() {
+			var client = LeanKitClient.createClient( "accountname.leankit.com", "me@mycompany.com", "test" );
+			client.client.host.should.equal( "https://accountname.leankit.com/kanban/api/" );
+		} );
+
+		it ( "builds the correct url from a given url", function() {
+			var client = LeanKitClient.createClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
+			client.client.host.should.equal( "https://mycompany.leankit.com/kanban/api/" );
+		} );
+
 	} );
+
 } );
