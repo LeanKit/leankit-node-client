@@ -41,16 +41,6 @@ This options object is the same object used by the [request module](https://gith
 * Create a folder in your node application's `node_modules` folder named `leankit-client` (e.g. `[project-name]/node_modules/leankit-client).
 * Copy all the files and folders in the `leankit-node-client` folder to the `leankit-client` folder created in the previous step.
 
-### Compiling leankit-client.js
-
-The LeanKit client for Node.js is written in CoffeeScript. To make changes, you'll need the CoffeeScript compiler.
-
-	npm install -g coffee-script
-
-Next, compile the LeanKit client module using:
-
-	coffee --compile leankit-client.coffee
-
 ### Running Tests
 
 * Set environment variables for the LeanKit account you wish to test with.
