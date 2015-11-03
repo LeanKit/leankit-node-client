@@ -1368,6 +1368,45 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
+	describe( "Board Updates Promises API", () => {
+		it( "getNewCards() should get cards without error", ( done ) => {
+			return client.getNewCards( board.Id ).then( ( res ) => {
+				res.should.have.length.above( 0 );
+				res[0].should.have.property( "TypeName" ).that.equals( "Task" );
+			}, ( err ) => {
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "getNewerIfExists() should return a newer board", () => {
+			return client.getNewerIfExists( board.Id, board.Version )
+				.should.eventually.have.property( "Version" )
+				.that.is.above( board.Version );
+		} );
+
+		it( "getBoardHistorySince() should return newer cards", ( done ) => {
+			client.getBoardHistorySince( board.Id, board.Version ).then( ( res ) => {
+				should.exist( res );
+				res.should.be.instanceOf( Array );
+				res.length.should.be.above( 0 );
+				res[ 0 ].should.have.property( "CardId" );
+				res[ 0 ].should.have.property( "EventType" );
+			}, ( err ) => {
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "getBoardUpdates() should return all recent updates", ( done ) => {
+			client.getBoardUpdates( board.Id, board.Version ).then( ( res ) => {
+				res.HasUpdates.should.be.true;
+				res.AffectedLanes.length.should.be.above( 0 );
+				res.Events.length.should.be.above( 0 );
+			}, ( err ) => {
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+	} );
+
 	describe( "Errors", () => {
 		before( () => {
 			let url = accountName === "kanban-cibuild" ?
