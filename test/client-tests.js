@@ -1185,6 +1185,94 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
+	describe( "Task Board/Card Promise API", () => {
+		let testCard = null;
+		let testCardId = 0;
+		let board = null;
+		let taskBoard = null;
+		let taskCard = null;
+
+		before( function() {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+				return makeTestCard( res.board, res.boardIdentifiers );
+			} ).then( ( card ) => {
+				testCard = card;
+				testCardId = card.Id;
+			} );
+		} );
+
+		after( function() {
+			if ( testCardId > 0 ) {
+				return removeTestCard( board.Id, testCardId );
+			}
+		} );
+
+		it( "addTask() should add a task to a card taskboard", () => {
+			testCard.Id.should.be.above( 0 );
+			// Get the default task card type
+			let cardType = _.find( board.CardTypes, {
+				IsDefaultTaskType: true
+			} );
+			cardType.Id.should.be.above( 0 );
+			taskCard = { Title: "Task Card 1", LaneId: 0, Index: 0, TypeId: cardType.Id };
+
+			return client.addTask( board.Id, testCard.Id, taskCard )
+				.should.eventually.have.property( "CardId" ).that.is.above( 0 );
+		} );
+
+		it( "getTaskboard() should get the card taskboard", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			return client.getTaskboard( board.Id, testCard.Id ).then( ( res ) => {
+				taskBoard = res;
+				taskBoard.Id.should.be.above( 0 );
+				taskBoard.Lanes.length.should.equal( 3 );
+				taskCard = taskBoard.Lanes[ 0 ].Cards[ 0 ];
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "updateTask() should update a task on a card taskboard", () => {
+			testCard.Id.should.be.above( 0 );
+			taskCard.Title = "Updated task 1";
+
+			return client.updateTask( board.Id, testCard.Id, taskCard )
+				.should.eventually.have.property( "ReplyCode" ).that.equals( 202 );
+		} );
+
+		it( "moveTask() should move a task on a card taskboard", () => {
+			testCard.Id.should.be.above( 0 );
+			let lane = _.find( taskBoard.Lanes, {
+				Index: 1
+			} );
+			let position = 0;
+			return client.moveTask( board.Id, testCard.Id, taskCard.Id, lane.Id, position )
+				.should.eventually.have.property( "ReplyCode" ).that.equals( 202 );
+		} );
+
+		it( "getTaskBoardUpdates() should get the latest taskboard", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			return client.getTaskBoardUpdates( board.Id, testCard.Id, 0 ).then( ( res ) => {
+				should.exist( res );
+				res.HasUpdates.should.be.true;
+				res.AffectedLanes.length.should.be.above( 0 );
+				res.Events.length.should.be.above( 0 );
+				res.CurrentBoardVersion.should.be.above( 1 );
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "deleteTask() should delete a task on a card taskboard", () => {
+			testCard.Id.should.be.above( 0 );
+			return client.deleteTask( board.Id, testCard.Id, taskCard.Id )
+				.should.eventually.have.property( "ReplyCode" ).that.equals( 203 );
+		} );
+	} );
+
 	describe( "Search API", () => {
 		it( "searchCards() should get cards without error", ( done ) => {
 			let searchOptions = {
