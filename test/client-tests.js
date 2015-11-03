@@ -4,6 +4,7 @@ let chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
 let when = require( "when" );
 
+const TEST_TIMEOUT = 20000;
 let fs = require( "fs" );
 let _ = require( "lodash" );
 // let should = require( "should" );
@@ -126,7 +127,7 @@ let removeTestCard = ( boardId, id ) => {
 };
 
 describe( "LeanKitClient", function() {
-	this.timeout( 10000 );
+	this.timeout( TEST_TIMEOUT );
 
 	describe( "Board API", () => {
 		let boards = null;
@@ -567,7 +568,7 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
-	describe.only( "Card Promise API", function() {
+	describe( "Card Promise API", function() {
 		let testCard = null;
 		let testCardId = 0;
 		let board = null;
@@ -977,6 +978,114 @@ describe( "LeanKitClient", function() {
 				res.ReplyCode.should.equal( 203 );
 				done();
 			} );
+		} );
+	} );
+
+	describe( "Card Attachments Promise API", () => {
+		let testCard = null;
+		let testCardId = 0;
+		let board = null;
+		let attachment = null;
+
+		before( function() {
+			fs.writeFile( "./test/testfile.txt", "test file" );
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+				return makeTestCard( res.board, res.boardIdentifiers );
+			} ).then( ( card ) => {
+				testCard = card;
+				testCardId = card.Id;
+			} );
+		} );
+
+		after( function() {
+			fs.unlink( "./test/testfile.txt" );
+			fs.unlink( "./test/download.txt" );
+			if ( testCardId > 0 ) {
+				return removeTestCard( board.Id, testCardId );
+			}
+		} );
+
+		it( "should add attachment without error", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			let file = fs.createReadStream( "./test/testfile.txt" );
+			return client.addAttachment( board.Id, testCard.Id, "Test Attachment", file ).then( ( res ) => {
+				should.exist( res );
+				res.should.have.property( "ReplyCode" );
+				res.ReplyCode.should.equal( 202 );
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "should get attachments without error", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			return client.getAttachments( board.Id, testCard.Id ).then( ( res ) => {
+				should.exist( res );
+				res.should.be.instanceOf( Array );
+				res.length.should.be.above( 0 );
+				res[ 0 ].should.have.property( "FileName" );
+				res[ 0 ].should.have.property( "Description" );
+				attachment = res[ 0 ];
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "should get attachment by ID without error", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			should.exist( attachment );
+			attachment.should.have.property( "Id" );
+			return client.getAttachment( board.Id, testCard.Id, attachment.Id ).then( ( res ) => {
+				should.exist( res );
+				res.should.have.property( "Id" );
+				res.should.have.property( "FileName" );
+				res.should.have.property( "Description" );
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "should get attachment count without error", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			return client.getAttachmentCount( board.Id, testCard.Id ).then( ( res ) => {
+				should.exist( res );
+				res.should.be.above( 0 );
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
+		} );
+
+		it( "should download attachment without error", ( done ) => {
+			should.exist( attachment );
+			attachment.should.have.property( "Id" );
+			let fileName = "./test/download.txt";
+			return client.downloadAttachment( board.Id, attachment.Id, fileName ).then( ( res ) => {
+				should.exist( res );
+				fs.readFile( fileName, "utf8", ( err, text ) => {
+					should.not.exist( err );
+					should.exist( text );
+					text.should.equal( "test file" );
+					done();
+				} );
+			} );
+		} );
+
+		it( "should delete attachment without error", ( done ) => {
+			should.exist( attachment );
+			attachment.should.have.property( "Id" );
+			return client.deleteAttachment( board.Id, testCard.Id, attachment.Id ).then( ( res ) => {
+				should.exist( res );
+				res.should.have.property( "ReplyCode" );
+				res.ReplyCode.should.equal( 203 );
+			}, ( err ) => {
+				console.error( err );
+				should.not.exist( err );
+			} ).should.notify( done );
 		} );
 	} );
 
