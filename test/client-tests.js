@@ -1274,6 +1274,14 @@ describe( "LeanKitClient", function() {
 	} );
 
 	describe( "Search API", () => {
+		let board = null;
+
+		before( () => {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+			} );
+		} );
+
 		it( "searchCards() should get cards without error", ( done ) => {
 			let searchOptions = {
 				IncludeArchiveOnly: false,
@@ -1295,6 +1303,29 @@ describe( "LeanKitClient", function() {
 				res.Results.length.should.be.above( 2 );
 				res.TotalResults.should.be.above( 2 );
 				done();
+			} );
+		} );
+
+		it( "promise version of searchCards() should get cards without error", () => {
+			let searchOptions = {
+				IncludeArchiveOnly: false,
+				IncludeBacklogOnly: false,
+				IncludeComments: false,
+				IncludeDescription: false,
+				IncludeExternalId: false,
+				IncludeTags: false,
+				AddedAfter: null,
+				AddedBefore: null,
+				CardTypeIds: [],
+				ClassOfServiceIds: [],
+				Page: 1,
+				MaxResults: 20,
+				OrderBy: "CreatedOn",
+				SortOrder: 0
+			};
+			return client.searchCards( board.Id, searchOptions ).then( ( res ) => {
+				res.Results.length.should.be.above( 2 );
+				res.TotalResults.should.be.above( 2 );
 			} );
 		} );
 	} );
