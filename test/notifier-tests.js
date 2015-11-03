@@ -1,36 +1,37 @@
-// var fs = require( "fs" );
-// var _ = require( "lodash" );
-// let should = require( "should" );
-// let nock = require( "nock" );
+let chai = require( "chai" );
+let should = chai.should();
+let chaiAsPromised = require( "chai-as-promised" );
+chai.use( chaiAsPromised );
+// let when = require( "when" );
 const LeanKitClient = require( "../src/leankit-client" );
 const LeanKitNotifer = require( "../src/leankit-notifier" );
 const accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
 const email = process.env.LEANKIT_EMAIL || "your@email.com";
 const pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
+const proxy = process.env.LEANKIT_PROXY || null;
 const boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
 
-describe.skip( "Notifier Tests", function() {
+describe( "Notifier Tests", function() {
 	this.timeout( 20000 );
 	let client = {};
 	let board = {};
 	let notifier = {};
 
-	before( ( done ) => {
-		if ( accountName !== "kanban-cibuild" ) {
+	before( () => {
+		if ( !proxy ) {
 			client = new LeanKitClient( accountName, email, pwd );
 		} else {
-			process.env.NODE.TLS.REJECT.UNAUTHORIZED = "0" ; //[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+			process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
 			client = new LeanKitClient( accountName, email, pwd, {
-				proxy: "http://127.0.0.1:8888"
+				proxy: proxy
 			} );
 		}
-		client.getBoardByName( boardToFind, ( err, res ) => {
+
+		return client.getBoardByName( boardToFind ).then( ( res ) => {
 			board = res;
 			board.Title.should.equal( boardToFind );
 			board.BoardUsers.length.should.be.above( 0 );
 			notifier = new LeanKitNotifer( client, board.Id, board.Version );
-			// console.log( notifier );
-			done();
 		} );
 	} );
 

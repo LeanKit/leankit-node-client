@@ -126,7 +126,7 @@ let removeTestCard = ( boardId, id ) => {
 	return client.deleteCard( boardId, id );
 };
 
-describe( "LeanKitClient", function() {
+describe.skip( "LeanKitClient", function() {
 	this.timeout( TEST_TIMEOUT );
 
 	describe( "Board API", () => {
