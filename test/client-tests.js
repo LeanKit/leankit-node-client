@@ -1,19 +1,24 @@
-var fs = require( "fs" );
-var _ = require( "lodash" );
-var should = require( "should" );
-var LeanKitClient = require( "../leankit-client" );
-var nock = require( "nock" );
-var accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
-var email = process.env.LEANKIT_EMAIL || "your@email.com";
-var pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
+let chai = require( "chai" );
+let should = chai.should();
+let chaiAsPromised = require( "chai-as-promised" );
+chai.use( chaiAsPromised );
 
-var client = {},
-	boards = [],
-	boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board",
-	boardIdentifiers = {},
-	board = {},
-	user = {},
-	testCard = {
+let fs = require( "fs" );
+let _ = require( "lodash" );
+// let should = require( "should" );
+let LeanKitClient = require( "../src/leankit-client" );
+let nock = require( "nock" );
+let accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
+let email = process.env.LEANKIT_EMAIL || "your@email.com";
+let pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
+let proxy = process.env.LEANKIT_PROXY || null;
+let boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
+let client = null;
+let boards = null;
+let board = null;
+let boardIdentifiers = null;
+let user = null;
+let cardTemplate = {
 		Id: 0,
 		Title: "Mocha Test Card",
 		Description: "",
@@ -27,92 +32,258 @@ var client = {},
 		ExternalSystemUrl: "",
 		Tags: "",
 		ClassOfServiceId: null,
-		ExternalCardId: "",
+		ExternalCardID: "",
 		AssignedUserIds: [],
 		UserWipOverrideComment: "Because..."
-	},
-	taskBoard = {},
-	taskCard = {},
-	attachment = {};
+	};
 
-if ( accountName !== "kanban-cibuild" ) {
-	client = LeanKitClient.createClient( accountName, email, pwd );
+// fiddler proxy: "http://127.0.0.1:8888"
+
+if ( !proxy ) {
+	client = new LeanKitClient( accountName, email, pwd );
 } else {
-	process.env.NODE.TLS.REJECT.UNAUTHORIZED = "0" ; //[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
-	client = LeanKitClient.createClient( accountName, email, pwd, {
-		"proxy": "http://127.0.0.1:8888"
+	process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+	client = new LeanKitClient( accountName, email, pwd, {
+		proxy: proxy
 	} );
 }
+
+let getTestBoard = () => {
+	return new Promise( ( resolve, reject ) => {
+		if ( !board ) {
+			client.getBoards().then( ( res ) => {
+				boards = res;
+				let tb = boards.find( ( b ) => {
+					return b.Title === boardToFind;
+				} );
+				return client.getBoard( tb.Id );
+			} ).then( ( res ) => {
+				board = res;
+				user = board.BoardUsers[ 0 ];
+				return client.getBoardIdentifiers( board.Id );
+			} ).then( ( res ) => {
+				boardIdentifiers = res;
+				resolve( { board: board, boardIdentifiers: boardIdentifiers } );
+			} );
+		} else {
+			resolve( { board: board, boardIdentifiers: boardIdentifiers } );
+		}
+	} );
+};
+
+let makeTestCard = ( board, boardIdentifiers ) => {
+	return new Promise( ( resolve, reject ) => {
+		let card = {
+				Id: 0,
+				Title: "Mocha Test Card",
+				Description: "",
+				TypeId: 0,
+				Priority: 1,
+				Size: 0,
+				IsBlocked: false,
+				BlockReason: "",
+				DueDate: "",
+				ExternalSystemName: "",
+				ExternalSystemUrl: "",
+				Tags: "",
+				ClassOfServiceId: null,
+				ExternalCardID: "",
+				AssignedUserIds: [],
+				UserWipOverrideComment: "Because..."
+			};
+
+		// Get the first active lane
+		let lane = _.find( boardIdentifiers.Lanes, {
+			LaneClassType: 0, Index: 0
+		} );
+
+		// Get the default card type
+		let cardType = _.find( board.CardTypes, {
+			IsDefault: true
+		} );
+
+		card.TypeId = cardType.Id;
+		let now = new Date();
+		card.Title = "Mocha test card " + now.getTime();
+		card.ExternalCardID = now.getTime();
+
+		client.addCard( board.Id, lane.Id, 0, card )
+			.then( ( res ) => {
+				return client.getCard( board.Id, res.CardId );
+			} )
+			.then( ( card ) => {
+				resolve( card );
+			} )
+			.catch( ( err ) => {
+				reject( err );
+			} );
+	} );
+};
+
+let removeTestCard = ( boardId, id ) => {
+	return client.deleteCard( boardId, id );
+};
 
 describe( "LeanKitClient", function() {
 	this.timeout( 10000 );
 
-	describe( "Board API", function() {
-		it( "should return a list of boards", function( done ) {
-			client.getBoards( function( err, res ) {
+	describe( "Board API", () => {
+		let boards = null;
+		let board = null;
+		it( "should return a list of boards", ( done ) => {
+			client.getBoards( ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				boards = res;
-				boards.length.should.be.above( 0 );
-				done();
-			} );
-		} );
-
-		it( "should return a list of new boards", function( done ) {
-			client.getNewBoards( function( err, res ) {
 				res.length.should.be.above( 0 );
 				done();
 			} );
 		} );
 
-		it( "should return a valid board by ID", function( done ) {
-			client.getBoard( boards[ 0 ].Id, function( err, res ) {
+		it( "should return a list of new boards", ( done ) => {
+			client.getNewBoards( ( err, res ) => {
+				res.length.should.be.above( 0 );
+				done();
+			} );
+		} );
+
+		it( "should return a valid board by ID", ( done ) => {
+			client.getBoard( boards[ 0 ].Id, ( err, res ) => {
 				res.Id.should.equal( boards[ 0 ].Id );
 				done();
 			} );
 		} );
 
-		it( "should return a valid board by name", function( done ) {
-			client.getBoardByName( boardToFind, function( err, res ) {
+		it( "should return a valid board by name", ( done ) => {
+			client.getBoardByName( boardToFind, ( err, res ) => {
+				res.Title.should.equal( boardToFind );
+				res.BoardUsers.length.should.be.above( 0 );
 				board = res;
-				board.Title.should.equal( boardToFind );
-				board.BoardUsers.length.should.be.above( 0 );
-				user = board.BoardUsers[ 0 ];
 				done();
 			} );
 		} );
 
-		it( "should return a valid set of board identifiers", function( done ) {
+		it( "should return a valid set of board identifiers", ( done ) => {
 			should.exist( board );
-			client.getBoardIdentifiers( board.Id, function( err, res ) {
+			client.getBoardIdentifiers( board.Id, ( err, res ) => {
 				res.Lanes.length.should.be.above( 0 );
 				res.CardTypes.length.should.be.above( 0 );
-				boardIdentifiers = res;
 				done();
 			} );
 		} );
 
-		it( "should return a valid set of backlog lanes", function( done ) {
+		it( "should return a valid set of backlog lanes", ( done ) => {
 			should.exist( board );
-			client.getBoardBacklogLanes( board.Id, function( err, res ) {
+			client.getBoardBacklogLanes( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
 				res[ 0 ].Width.should.be.above( 0 );
 				done();
 			} );
 		} );
 
-		it( "should return a valid set of archive lanes", function( done ) {
+		it( "should return a valid set of archive lanes", ( done ) => {
 			should.exist( board );
-			client.getBoardArchiveLanes( board.Id, function( err, res ) {
+			client.getBoardArchiveLanes( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
 				res[ 0 ].Lane.Width.should.be.above( 0 );
 				done();
 			} );
 		} );
 
-		it( "should return cards from the archive", function( done ) {
+		it( "should return cards from the archive", ( done ) => {
 			should.exist( board );
-			client.getBoardArchiveCards( board.Id, function( err, res ) {
+			client.getBoardArchiveCards( board.Id, ( err, res ) => {
+				res.length.should.be.above( 0 );
+				done();
+			} );
+		} );
+	} );
+
+	describe( "Board Promise API", () => {
+		let boards = null;
+		let board = null;
+		it( "should return a list of boards as a promise", ( done ) => {
+			client.getBoards().then( ( res ) => {
+				should.exist( res );
+				res.length.should.be.above( 0 );
+				boards = res;
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a list of new boards", ( done ) => {
+			client.getNewBoards().then( ( res ) => {
+				res.length.should.be.above( 0 );
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a valid board by ID", ( done ) => {
+			client.getBoard( boards[ 0 ].Id ).then( ( res ) => {
+				res.Id.should.equal( boards[ 0 ].Id );
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a valid board by name", ( done ) => {
+			client.getBoardByName( boardToFind ).then( ( res ) => {
+				res.Title.should.equal( boardToFind );
+				res.BoardUsers.length.should.be.above( 0 );
+				board = res;
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a valid set of board identifiers", ( done ) => {
+			should.exist( board );
+			client.getBoardIdentifiers( board.Id ).then( ( res ) => {
+				res.should.be.ok;
+				res.Lanes.length.should.be.above( 0 );
+				res.CardTypes.length.should.be.above( 0 );
+				boardIdentifiers = res;
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a valid set of backlog lanes", ( done ) => {
+			should.exist( board );
+			client.getBoardBacklogLanes( board.Id ).then( ( res ) => {
+				res.length.should.be.above( 0 );
+				res[ 0 ].Width.should.be.above( 0 );
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+				done();
+			} );
+		} );
+
+		it( "should return a valid set of archive lanes", ( done ) => {
+			should.exist( board );
+			client.getBoardArchiveLanes( board.Id ).then( ( res ) => {
+				res.length.should.be.above( 0 );
+				res[ 0 ].Lane.Width.should.be.above( 0 );
+				done();
+			} );
+		} );
+
+		it( "should return cards from the archive", ( done ) => {
+			should.exist( board );
+			client.getBoardArchiveCards( board.Id ).then( ( res ) => {
 				res.length.should.be.above( 0 );
 				done();
 			} );
@@ -120,177 +291,215 @@ describe( "LeanKitClient", function() {
 	} );
 
 	describe( "Card API", function() {
+		let testCard = null;
+		let testCardId = 0;
+		let board = null;
+		let boardIdentifiers = null;
+
+		before( function() {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+				boardIdentifiers = res.boardIdentifiers;
+			} );
+		} );
+
+		after( function() {
+			if ( testCardId > 0 ) {
+				return removeTestCard( board.Id, testCardId );
+			}
+		} );
 
 		it( "should add a card to the first active lane without error", function( done ) {
 			should.exist( board );
 			should.exist( boardIdentifiers );
 
 			// Get the first active lane
-			var lane = _.find( boardIdentifiers.Lanes, {
-				"LaneClassType": 0,
-				"Index": 0
+			let lane = _.find( boardIdentifiers.Lanes, {
+				LaneClassType: 0, Index: 0
 			} );
 			lane.Id.should.be.above( 0 );
 
 			// Get the default card type
-			var cardType = _.find( board.CardTypes, {
-				"IsDefault": true
+			let cardType = _.find( board.CardTypes, {
+				IsDefault: true
 			} );
 			cardType.Id.should.be.above( 0 );
 
-			testCard.TypeId = cardType.Id;
-			var now = new Date();
-			testCard.Title = "Mocha test card " + now.getTime();
-			testCard.ExternalCardId = now.getTime();
+			let card = _.clone( cardTemplate );
 
-			client.addCard( board.Id, lane.Id, 0, testCard, function( err, res ) {
+			card.TypeId = cardType.Id;
+			let now = new Date();
+			card.Title = "Mocha test card " + now.getTime();
+			card.ExternalCardID = now.getTime();
+
+			client.addCard( board.Id, lane.Id, 0, card, ( err, res ) => {
+				if ( err ) {
+					console.log( err );
+				}
+				should.not.exist( err );
+				should.exist( res );
 				res.CardId.should.be.above( 0 );
-				testCard.Id = res.CardId;
+				testCardId = res.CardId;
 				done();
 			} );
+
+			// client.addCard( board.Id, lane.Id, 0, card ).then( ( res ) => {
+			// 	should.exist( res );
+			// 	res.CardId.should.be.above( 0 );
+			// 	testCardId = res.CardId;
+			// }, ( err ) => {
+			// 	console.error( err );
+			// 	should.not.exist( err );
+			// } ).should.notify( done );
 		} );
 
 		it( "should add multiple cards without error", function( done ) {
 			should.exist( boardIdentifiers );
-			var lane = _.find( boardIdentifiers.Lanes, {
-				"LaneClassType": 0,
-				"Index": 0
+			let lane = _.find( boardIdentifiers.Lanes, {
+				LaneClassType: 0,
+				Index: 0
 			} );
-			var now = new Date();
-			var externalCardId = now.getTime();
+			let cardType = _.find( board.CardTypes, {
+				IsDefault: true
+			} );
+			cardType.Id.should.be.above( 0 );
+			let now = new Date();
+			let externalCardId = now.getTime();
 
-			var card1 = _.clone( testCard );
+			let card1 = _.clone( cardTemplate );
 			card1.Id = 0;
 			card1.Title = "AddCards Card 1 " + externalCardId;
-			card1.ExternalCardId = externalCardId;
+			card1.ExternalCardID = externalCardId;
 			card1.LaneId = lane.Id;
+			card1.TypeId = cardType.Id;
 			externalCardId++;
 
-			var card2 = _.clone( testCard );
-			card2.Id = 0;
+			let card2 = _.clone( card1 );
 			card2.Title = "AddCards Card 2 " + externalCardId;
-			card2.ExternalCardId = externalCardId;
-			card2.LaneId = lane.Id;
+			card2.ExternalCardID = externalCardId;
 
 			client.addCards( board.Id, [ card1, card2 ], function( err, res ) {
+				if ( err ) {
+					console.log( err );
+				}
+				should.exist( res );
 				res.length.should.equal( 2 );
-				res[ 0 ].Title.should.startWith( "AddCards" );
+				res[ 0 ].Title.should.have.string( "AddCards" );
 				done();
 			} );
 		} );
 
-		it( "should return the test card by ID", function( done ) {
+		it( "should return the test card by ID", ( done ) => {
 			should.exist( board );
-			client.getCard( board.Id, testCard.Id, function( err, res ) {
-				var card = res;
-				card.Id.should.equal( testCard.Id );
+			client.getCard( board.Id, testCardId, ( err, res ) => {
+				testCard = res;
+				testCard.Id.should.equal( testCardId );
 				done();
 			} );
 		} );
 
-		it( "should return the test card by external ID", function( done ) {
+		it( "should return the test card by external ID", ( done ) => {
 			should.exist( testCard );
 			testCard.Id.should.be.above( 0 );
-			client.getCardByExternalId( board.Id, testCard.ExternalCardId, function( err, res ) {
+			client.getCardByExternalId( board.Id, testCard.ExternalCardID, ( err, res ) => {
 				// console.log(res);
 				should.not.exist( err );
 				should.exist( res );
 				// getCardByExternalId returns an array
 				res.length.should.equal( 1 );
-				var card = res[ 0 ];
+				let card = res[ 0 ];
 				card.Id.should.equal( testCard.Id );
 				done();
 			} );
 		} );
 
-		it( "moveCard() should move card to 2nd active lane", function( done ) {
+		it( "moveCard() should move card to 2nd active lane", ( done ) => {
 			testCard.Id.should.be.above( 0 );
 			// Find first active lane
-			var lane = _.find( boardIdentifiers.Lanes, {
-				"LaneClassType": 0,
-				"Index": 1
+			let lane = _.find( boardIdentifiers.Lanes, {
+				LaneClassType: 0,
+				Index: 1
 			} );
-			var position = 0;
-			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing...", function( err, res ) {
+			let position = 0;
+			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing...", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "moveCardByExternalId() should move card back to 1st active lane", function( done ) {
+		it( "moveCardByExternalId() should move card back to 1st active lane", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			var lane = _.find( boardIdentifiers.Lanes, {
-				"LaneClassType": 0,
-				"Index": 0
+			let lane = _.find( boardIdentifiers.Lanes, {
+				LaneClassType: 0,
+				Index: 0
 			} );
-			var position = 0;
-			client.moveCardByExternalId( board.Id, testCard.ExternalCardId, lane.Id, position, "Moving card for testing...", function( err, res ) {
+			let position = 0;
+			client.moveCardByExternalId( board.Id, testCard.ExternalCardID, lane.Id, position, "Moving card for testing...", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it.skip( "should move card to another board", function( done ) {
+		it.skip( "should move card to another board", ( done ) => {
 			testCard.Id.should.be.above( 0 );
 			// Find a destination board
-			var otherBoards = _.remove( boards, function( b ) {
+			let otherBoards = _.remove( boards, ( b ) => {
 				return b.Id !== board.Id;
 			} );
-			var destinationBoard = otherBoards[ 0 ];
+			let destinationBoard = otherBoards[ 0 ];
 			destinationBoard.Id.should.not.equal( board.Id );
 
-			client.moveCardToBoard( testCard.Id, destinationBoard.Id, function( err, res ) {
+			client.moveCardToBoard( testCard.Id, destinationBoard.Id, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 
 				// Move it back
-				client.moveCardToBoard( testCard.Id, board.Id, function( err, res ) {
+				client.moveCardToBoard( testCard.Id, board.Id, ( err, res ) => {
 					done();
 				} );
 			} );
 		} );
 
-		it( "updateCard() should update a card without error", function( done ) {
+		it( "updateCard() should update a card without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			testCard.Title = "Updated test card " + testCard.ExternalCardId;
-			client.updateCard( board.Id, testCard, function( err, res ) {
+			testCard.Title = "Updated test card " + testCard.ExternalCardID;
+			client.updateCard( board.Id, testCard, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "updateCardFields() should update a card without error", function( done ) {
+		it( "updateCardFields() should update a card without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			testCard.Title = "Test Card Update 2 " + testCard.ExternalCardId;
-			var updateFields = {
+			let updateFields = {
 				CardId: testCard.Id,
-				Title: "Test Card update 2 " + testCard.ExternalCardId,
+				Title: "Test Card update 2 " + testCard.ExternalCardID,
 				Tags: "test"
 			};
-			client.updateCardFields( updateFields, function( err, res ) {
+			client.updateCardFields( updateFields, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "updateCards() should update multiple cards without error", function( done ) {
+		it( "updateCards() should update multiple cards without error", ( done ) => {
 			should.exist( board );
 			// Get the latest version of the test board
-			client.getBoard( board.Id, function( err, res ) {
-				var b = res;
-				var lane = _.find( b.Lanes, {
-					"Index": 0
+			client.getBoard( board.Id, ( err, res ) => {
+				let b = res;
+				let lane = _.find( b.Lanes, {
+					Index: 0
 				} );
 				// console.log(b);
 				// Filter out cards that do no start with "AddCards"
-				var cards = _.remove( lane.Cards, function( card ) {
+				let cards = _.remove( lane.Cards, ( card ) => {
 					return card.Title && card.Title.indexOf( "AddCards" ) === 0;
 				} );
 				// console.log(cards);
-				cards.forEach( function( card ) {
+				cards.forEach( ( card ) => {
 					card.Tags = "updateCards";
 					card.Priority = 2;
 				} );
-				client.updateCards( b.Id, cards, function( err, res ) {
+				client.updateCards( b.Id, cards, ( err, res ) => {
 					// console.log(res);
 					should.not.exist( err );
 					should.exist( res );
@@ -301,71 +510,157 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "addComment() should add a comment without error", function( done ) {
+		it( "addComment() should add a comment without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment.", function( err, res ) {
+			client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment.", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "addCommentByExternalId() should add a comment without error", function( done ) {
+		it( "addCommentByExternalId() should add a comment without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.addCommentByExternalId( board.Id, testCard.ExternalCardId, user.Id, "Adding a test comment by external id.", function( err, res ) {
+			client.addCommentByExternalId( board.Id, testCard.ExternalCardID, user.Id, "Adding a test comment by external id.", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "should get comments without error", function( done ) {
+		it( "should get comments without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getComments( board.Id, testCard.Id, function( err, res ) {
+			client.getComments( board.Id, testCard.Id, ( err, res ) => {
 				res.length.should.equal( 2 );
 				res[ 0 ].Text.indexOf( "Adding a test comment" ).should.equal( 0 );
 				done();
 			} );
 		} );
 
-		it( "should get card history without error", function( done ) {
+		it( "should get card history without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getCardHistory( board.Id, testCard.Id, function( err, res ) {
+			client.getCardHistory( board.Id, testCard.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
 				done();
 			} );
 		} );
 
+		it( "should delete test card without error", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			client.deleteCard( board.Id, testCard.Id, ( err, res ) => {
+				res.ReplyCode.should.equal( 203 );
+				testCard = null;
+				testCardId = 0;
+				done();
+			} );
+		} );
+
+		it( "should delete multiple cards without error", ( done ) => {
+			// Get the latest version of the test board
+			client.getBoard( board.Id, ( err, res ) => {
+				let b = res;
+				let lane = _.find( b.Lanes, {
+					Index: 0
+				} );
+
+				lane.should.be.ok;
+				lane.Cards.length.should.be.above( 1 );
+
+				// Filter out cards that do no start with "AddCards"
+				let cards = _.remove( lane.Cards, ( card ) => {
+					return card.Title ? card.Title.indexOf( "AddCards" ) === 0 : false;
+				} );
+
+				cards.length.should.be.above( 1 );
+
+				let cardIds = _.pluck( cards, "Id" );
+				client.deleteCards( board.Id, cardIds, ( err, res ) => {
+					res.ReplyCode.should.equal( 203 );
+					done();
+				} );
+			} );
+		} );
 	} );
 
-	describe( "Card Attachments API", function() {
+	describe.skip( "Card Promise API", () => {
+		it( "should add a card to the first active lane without error", ( done ) => {
+			should.exist( board );
+			should.exist( boardIdentifiers );
+
+			// Get the first active lane
+			let lane = _.find( boardIdentifiers.Lanes, {
+				LaneClassType: 0, Index: 0
+			} );
+			lane.Id.should.be.above( 0 );
+
+			// Get the default card type
+			let cardType = _.find( board.CardTypes, {
+				IsDefault: true
+			} );
+			cardType.Id.should.be.above( 0 );
+
+			let card = _.clone( cardTemplate );
+			card.TypeId = cardType.Id;
+			let now = new Date();
+			card.Title = "Mocha test card " + now.getTime();
+			card.ExternalCardID = now.getTime();
+
+			client.addCard( board.Id, lane.Id, 0, card ).then( ( res ) => {
+				res.CardId.should.be.above( 0 );
+				testCardId = res.CardId;
+				done();
+			}, ( err ) => {
+				should.not.exist( err );
+			} );
+		} );
+	} );
+
+	describe( "Card Attachments API", () => {
+		let testCard = null;
+		let testCardId = 0;
+		let board = null;
+		let attachment = null;
 
 		before( function() {
 			fs.writeFile( "./test/testfile.txt", "test file" );
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+				return makeTestCard( res.board, res.boardIdentifiers );
+			} ).then( ( card ) => {
+				testCard = card;
+				testCardId = card.Id;
+			} );
 		} );
 
 		after( function() {
 			fs.unlink( "./test/testfile.txt" );
 			fs.unlink( "./test/download.txt" );
+			if ( testCardId > 0 ) {
+				return removeTestCard( board.Id, testCardId );
+			}
 		} );
 
-		it( "should add attachment without error", function( done ) {
+		it( "should add attachment without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			var file = fs.createReadStream( "./test/testfile.txt" );
-			client.addAttachment( board.Id, testCard.Id, "Test Attachment", file, function( err, res ) {
+			let file = fs.createReadStream( "./test/testfile.txt" );
+			client.addAttachment( board.Id, testCard.Id, "Test Attachment", file, ( err, res ) => {
+				if ( err ) {
+					console.log( "err:", err );
+				}
 				should.not.exist( err );
 				should.exist( res );
 				res.should.have.property( "ReplyCode" );
 				res.ReplyCode.should.equal( 202 );
-				// console.log( res );
 				done();
 			} );
 		} );
 
-		it( "should get attachments without error", function( done ) {
+		it( "should get attachments without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getAttachments( board.Id, testCard.Id, function( err, res ) {
+			client.getAttachments( board.Id, testCard.Id, ( err, res ) => {
+				if ( err ) {
+					console.log( "err:", err );
+				}
 				should.not.exist( err );
 				should.exist( res );
-				// console.log(res);
 				res.should.be.instanceOf( Array );
 				res.length.should.be.above( 0 );
 				res[ 0 ].should.have.property( "FileName" );
@@ -375,14 +670,13 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get attachment by ID without error", function( done ) {
+		it( "should get attachment by ID without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			client.getAttachment( board.Id, testCard.Id, attachment.Id, function( err, res ) {
+			client.getAttachment( board.Id, testCard.Id, attachment.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
-				// console.log(res);
 				res.should.have.property( "Id" );
 				res.should.have.property( "FileName" );
 				res.should.have.property( "Description" );
@@ -390,9 +684,9 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get attachment count without error", function( done ) {
+		it( "should get attachment count without error", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getAttachmentCount( board.Id, testCard.Id, function( err, res ) {
+			client.getAttachmentCount( board.Id, testCard.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				res.should.be.above( 0 );
@@ -401,14 +695,14 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should download attachment without error", function( done ) {
+		it( "should download attachment without error", ( done ) => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			var fileName = "./test/download.txt";
-			client.downloadAttachment( board.Id, attachment.Id, fileName, function( err, res ) {
+			let fileName = "./test/download.txt";
+			client.downloadAttachment( board.Id, attachment.Id, fileName, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
-				fs.readFile( fileName, "utf8", function( err, text ) {
+				fs.readFile( fileName, "utf8", ( err, text ) => {
 					should.not.exist( err );
 					should.exist( text );
 					text.should.equal( "test file" );
@@ -417,10 +711,10 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should delete attachment without error", function( done ) {
+		it( "should delete attachment without error", ( done ) => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			client.deleteAttachment( board.Id, testCard.Id, attachment.Id, function( err, res ) {
+			client.deleteAttachment( board.Id, testCard.Id, attachment.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				// console.log(res);
@@ -429,28 +723,49 @@ describe( "LeanKitClient", function() {
 				done();
 			} );
 		} );
-
 	} );
 
-	describe( "Task Board/Card API", function() {
-		it( "addTask() should add a task to a card taskboard", function( done ) {
-			testCard.Id.should.be.above( 0 );
-			taskCard = _.clone( testCard );
-			taskCard.Id = 0;
-			taskCard.Title = "Task Card 1";
-			taskCard.LaneId = 0;
-			taskCard.Index = 0;
-			taskCard.ExternalCardId = "";
+	describe( "Task Board/Card API", () => {
+		let testCard = null;
+		let testCardId = 0;
+		let board = null;
+		let taskBoard = null;
+		let taskCard = null;
 
-			client.addTask( board.Id, testCard.Id, taskCard, function( err, res ) {
+		before( function() {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+				return makeTestCard( res.board, res.boardIdentifiers );
+			} ).then( ( card ) => {
+				testCard = card;
+				testCardId = card.Id;
+			} );
+		} );
+
+		after( function() {
+			if ( testCardId > 0 ) {
+				return removeTestCard( board.Id, testCardId );
+			}
+		} );
+
+		it( "addTask() should add a task to a card taskboard", ( done ) => {
+			testCard.Id.should.be.above( 0 );
+			// Get the default task card type
+			let cardType = _.find( board.CardTypes, {
+				IsDefaultTaskType: true
+			} );
+			cardType.Id.should.be.above( 0 );
+			taskCard = { Title: "Task Card 1", LaneId: 0, Index: 0, TypeId: cardType.Id };
+
+			client.addTask( board.Id, testCard.Id, taskCard, ( err, res ) => {
 				res.CardId.should.be.above( 0 );
 				done();
 			} );
 		} );
 
-		it( "getTaskboard() should get the card taskboard", function( done ) {
+		it( "getTaskboard() should get the card taskboard", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getTaskboard( board.Id, testCard.Id, function( err, res ) {
+			client.getTaskboard( board.Id, testCard.Id, ( err, res ) => {
 				taskBoard = res;
 				taskBoard.Id.should.be.above( 0 );
 				taskBoard.Lanes.length.should.equal( 3 );
@@ -460,31 +775,31 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "updateTask() should update a task on a card taskboard", function( done ) {
+		it( "updateTask() should update a task on a card taskboard", ( done ) => {
 			testCard.Id.should.be.above( 0 );
 			taskCard.Title = "Updated task 1";
 
-			client.updateTask( board.Id, testCard.Id, taskCard, function( err, res ) {
+			client.updateTask( board.Id, testCard.Id, taskCard, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "moveTask() should move a task on a card taskboard", function( done ) {
+		it( "moveTask() should move a task on a card taskboard", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			var lane = _.find( taskBoard.Lanes, {
+			let lane = _.find( taskBoard.Lanes, {
 				Index: 1
 			} );
-			var position = 0;
-			client.moveTask( board.Id, testCard.Id, taskCard.Id, lane.Id, position, function( err, res ) {
+			let position = 0;
+			client.moveTask( board.Id, testCard.Id, taskCard.Id, lane.Id, position, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "getTaskBoardUpdates() should get the latest taskboard", function( done ) {
+		it( "getTaskBoardUpdates() should get the latest taskboard", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.getTaskBoardUpdates( board.Id, testCard.Id, 0, function( err, res ) {
+			client.getTaskBoardUpdates( board.Id, testCard.Id, 0, ( err, res ) => {
 				// console.log(err);
 				// console.log(res);
 				should.not.exist( err );
@@ -497,19 +812,18 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "deleteTask() should delete a task on a card taskboard", function( done ) {
+		it( "deleteTask() should delete a task on a card taskboard", ( done ) => {
 			testCard.Id.should.be.above( 0 );
-			client.deleteTask( board.Id, testCard.Id, taskCard.Id, function( err, res ) {
+			client.deleteTask( board.Id, testCard.Id, taskCard.Id, ( err, res ) => {
 				res.ReplyCode.should.equal( 203 );
 				done();
 			} );
 		} );
-
 	} );
 
-	describe( "Search API", function() {
-		it( "searchCards() should get cards without error", function( done ) {
-			var searchOptions = {
+	describe( "Search API", () => {
+		it( "searchCards() should get cards without error", ( done ) => {
+			let searchOptions = {
 				IncludeArchiveOnly: false,
 				IncludeBacklogOnly: false,
 				IncludeComments: false,
@@ -525,7 +839,7 @@ describe( "LeanKitClient", function() {
 				OrderBy: "CreatedOn",
 				SortOrder: 0
 			};
-			client.searchCards( board.Id, searchOptions, function( err, res ) {
+			client.searchCards( board.Id, searchOptions, ( err, res ) => {
 				res.Results.length.should.be.above( 2 );
 				res.TotalResults.should.be.above( 2 );
 				done();
@@ -533,24 +847,24 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
-	describe( "Board Updates API", function() {
-		it( "getNewCards() should get cards without error", function( done ) {
-			client.getNewCards( board.Id, function( err, res ) {
+	describe( "Board Updates API", () => {
+		it( "getNewCards() should get cards without error", ( done ) => {
+			client.getNewCards( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
 				res[ 0 ].TypeName.should.equal( "Task" );
 				done();
 			} );
 		} );
 
-		it( "getNewerIfExists() should return a newer board", function( done ) {
-			client.getNewerIfExists( board.Id, board.Version, function( err, res ) {
+		it( "getNewerIfExists() should return a newer board", ( done ) => {
+			client.getNewerIfExists( board.Id, board.Version, ( err, res ) => {
 				res.Version.should.be.above( board.Version );
 				done();
 			} );
 		} );
 
-		it( "getBoardHistorySince() should return newer cards", function( done ) {
-			client.getBoardHistorySince( board.Id, board.Version, function( err, res ) {
+		it( "getBoardHistorySince() should return newer cards", ( done ) => {
+			client.getBoardHistorySince( board.Id, board.Version, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				res.should.be.instanceOf( Array );
@@ -561,8 +875,8 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "getBoardUpdates() should return all recent updates", function( done ) {
-			client.getBoardUpdates( board.Id, board.Version, function( err, res ) {
+		it( "getBoardUpdates() should return all recent updates", ( done ) => {
+			client.getBoardUpdates( board.Id, board.Version, ( err, res ) => {
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
 				res.Events.length.should.be.above( 0 );
@@ -571,44 +885,13 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
-	describe( "Delete Card API", function() {
-		it( "should delete test card without error", function( done ) {
-			testCard.Id.should.be.above( 0 );
-			client.deleteCard( board.Id, testCard.Id, function( err, res ) {
-				res.ReplyCode.should.equal( 203 );
-				done();
-			} );
-		} );
-
-		it( "should delete multiple cards without error", function( done ) {
-			// Get the latest version of the test board
-			client.getBoard( board.Id, function( err, res ) {
-				var b = res;
-				var lane = _.find( b.Lanes, {
-					"Index": 0
-				} );
-
-				// Filter out cards that do no start with "AddCards"
-				var cards = _.remove( lane.Cards, function( card ) {
-					return card.Title.indexOf( "AddCards" ) === 0;
-				} );
-				var cardIds = _.pluck( cards, "Id" );
-				client.deleteCards( board.Id, cardIds, function( err, res ) {
-					res.ReplyCode.should.equal( 203 );
-					done();
-				} );
-			} );
-		} );
-	} );
-
-	describe( "Errors", function() {
-		var scope;
-		before( function() {
-			var url = accountName === "kanban-cibuild" ?
+	describe( "Errors", () => {
+		before( () => {
+			let url = accountName === "kanban-cibuild" ?
 				"http://kanban-cibuild.localkanban.com" :
 				"https://" + accountName + ".leankit.com";
 
-			scope = nock( url )
+			nock( url )
 				.get( "/kanban/api/boards" )
 				.reply( 200, {
 					ReplyData: [ {
@@ -619,31 +902,32 @@ describe( "LeanKitClient", function() {
 					ReplyCode: 503,
 				ReplyText: "Some useful message here." } );
 		} );
-		after( function() {
+		after( () => {
 			nock.cleanAll();
 		} );
 
-		it( "should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx", function( done ) {
-			client.getBoards( function( err, res ) {
+		it( "should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx", ( done ) => {
+			client.getBoards( ( err, res ) => {
 				should.exist( err );
 				should.not.exist( res );
-				err.statusCode.should.equal( 503 );
+				console.log( err );
+				err.replyCode.should.equal( 503 );
 				done();
 			} );
 		} );
 	} );
-	describe( "Client", function() {
-		it( "should let you bypass user/pass in favor of headers", function( done ) {
-			var credentials = new Buffer( email + ":" + pwd ).toString( "base64" );
-			var opts = {
+	describe( "Client", () => {
+		it( "should let you bypass user/pass in favor of headers", ( done ) => {
+			let credentials = new Buffer( email + ":" + pwd ).toString( "base64" );
+			let opts = {
 				headers: {
 					authorization: "Basic " + credentials
 				}
 			};
 
-			var client = LeanKitClient.createClient( accountName, opts );
+			let client = new LeanKitClient( accountName, opts );
 
-			client.getBoards( function( err, res ) {
+			client.getBoards( ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				boards = res;
@@ -652,21 +936,19 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it ( "builds the correct url from a given account name", function() {
-			var client = LeanKitClient.createClient( "account", "me@mycompany.com", "test" );
-			client.client.host.should.equal( "https://account.leankit.com/kanban/api/" );
+		it( "builds the correct url from a given account name", () => {
+			let client = new LeanKitClient( "account", "me@mycompany.com", "test" );
+			client._client.host.should.equal( "https://account.leankit.com/kanban/api/" );
 		} );
 
-		it ( "builds the correct url from a given account domain name", function() {
-			var client = LeanKitClient.createClient( "accountname.leankit.com", "me@mycompany.com", "test" );
-			client.client.host.should.equal( "https://accountname.leankit.com/kanban/api/" );
+		it( "builds the correct url from a given account domain name", () => {
+			let client = new LeanKitClient( "accountname.leankit.com", "me@mycompany.com", "test" );
+			client._client.host.should.equal( "https://accountname.leankit.com/kanban/api/" );
 		} );
 
-		it ( "builds the correct url from a given url", function() {
-			var client = LeanKitClient.createClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
-			client.client.host.should.equal( "https://mycompany.leankit.com/kanban/api/" );
+		it( "builds the correct url from a given url", () => {
+			let client = new LeanKitClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
+			client._client.host.should.equal( "https://mycompany.leankit.com/kanban/api/" );
 		} );
-
 	} );
-
 } );
