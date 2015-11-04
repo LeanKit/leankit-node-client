@@ -12,7 +12,7 @@ const pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
 const proxy = process.env.LEANKIT_PROXY || null;
 const boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
 
-describe( "Notifier Tests", function() {
+describe.skip( "Notifier Tests", function() {
 	this.timeout( 20000 );
 	let client = {};
 	let board = {};

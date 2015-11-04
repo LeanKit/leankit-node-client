@@ -126,7 +126,7 @@ let removeTestCard = ( boardId, id ) => {
 	return client.deleteCard( boardId, id );
 };
 
-describe.skip( "LeanKitClient", function() {
+describe( "LeanKitClient", function() {
 	this.timeout( TEST_TIMEOUT );
 
 	describe( "Board API", () => {
@@ -1333,8 +1333,12 @@ describe.skip( "LeanKitClient", function() {
 	describe( "Board Updates API", () => {
 		it( "getNewCards() should get cards without error", ( done ) => {
 			client.getNewCards( board.Id, ( err, res ) => {
+				should.not.exist( err );
+				should.exist( res );
 				res.length.should.be.above( 0 );
-				res[ 0 ].TypeName.should.equal( "Task" );
+				res[ 0 ].should.have.property( "Id" );
+				res[ 0 ].should.have.property( "LaneId" );
+				res[ 0 ].should.have.property( "TypeName" );
 				done();
 			} );
 		} );
@@ -1371,8 +1375,11 @@ describe.skip( "LeanKitClient", function() {
 	describe( "Board Updates Promises API", () => {
 		it( "getNewCards() should get cards without error", ( done ) => {
 			return client.getNewCards( board.Id ).then( ( res ) => {
+				should.exist( res );
 				res.should.have.length.above( 0 );
-				res[0].should.have.property( "TypeName" ).that.equals( "Task" );
+				res[ 0 ].should.have.property( "Id" );
+				res[ 0 ].should.have.property( "LaneId" );
+				res[ 0 ].should.have.property( "TypeName" );
 			}, ( err ) => {
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -1409,8 +1416,8 @@ describe.skip( "LeanKitClient", function() {
 
 	describe( "Errors", () => {
 		before( () => {
-			let url = accountName === "kanban-cibuild" ?
-				"http://kanban-cibuild.localkanban.com" :
+			let url = accountName.startsWith( "http" ) ?
+				accountName :
 				"https://" + accountName + ".leankit.com";
 
 			nock( url )
@@ -1429,7 +1436,7 @@ describe.skip( "LeanKitClient", function() {
 		} );
 
 		it( "should invoke callback with error arg when API replies with 200 OK + ReplyCode not 2xx", ( done ) => {
-			client.getBoards( ( err, res ) => {
+			return client.getBoards( ( err, res ) => {
 				should.exist( err );
 				should.not.exist( res );
 				err.replyCode.should.equal( 503 );
