@@ -1,5 +1,6 @@
 let chai = require( "chai" );
-let should = chai.should();
+chai.should();
+// let should = chai.should();
 let chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
 // let when = require( "when" );
