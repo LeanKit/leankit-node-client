@@ -8,7 +8,7 @@ const TEST_TIMEOUT = 20000;
 let fs = require( "fs" );
 let _ = require( "lodash" );
 // let should = require( "should" );
-let LeanKitClient = require( "../src/leankit-client" );
+let LeanKitClient = require( "../src/client" );
 let nock = require( "nock" );
 let accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
 let email = process.env.LEANKIT_EMAIL || "your@email.com";
@@ -117,7 +117,7 @@ let removeTestCard = ( boardId, id ) => {
 	return client.deleteCard( boardId, id );
 };
 
-describe.skip( "LeanKitClient", function() {
+describe( "LeanKitClient", function() {
 	this.timeout( TEST_TIMEOUT );
 
 	before( () => {

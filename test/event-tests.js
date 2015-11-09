@@ -6,16 +6,15 @@ let should = chai.should();
 let chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
 // let when = require( "when" );
-const LeanKitClient = require( "../src/leankit-client" );
-const LeanKitEvents = require( "../src/leankit-events" );
+const LeanKitClient = require( "../src/client" );
+const LeanKitEvents = require( "../src/events" );
 const accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
 const email = process.env.LEANKIT_EMAIL || "your@email.com";
 const pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
 const proxy = process.env.LEANKIT_PROXY || null;
 // const boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
 
-describe( "Events Tests", function() {
-	this.timeout( 30000 );
+describe( "Events Tests", () => {
 	let client = {};
 	// let board = {};
 	let events = {};
@@ -72,9 +71,52 @@ describe( "Events Tests", function() {
 				proxy: proxy
 			} );
 		}
-		// events.on( "activity-types-changed", ( update ) => {
-		// 	console.log( "activity-types-changed:", update );
-		// } );
+	} );
+
+	describe( "client constructor", () => {
+		const testVersion = 33;
+		const testPollInterval = 55;
+		before( () => {
+			events = new LeanKitEvents( client, boardId, testVersion, testPollInterval );
+		} );
+
+		it( "has the right board version", () => {
+			events.version.should.equal( testVersion );
+		} );
+
+		it( "has the right polling interval", () => {
+			events.pollInterval.should.equal( testPollInterval );
+		} );
+	} );
+
+	describe( "default client constructor", () => {
+		const eventType = "activity-types-changed";
+		const mockResponseFile = "./test/test-files/activity-types-changed.json";
+		let boardScope = {};
+		before( () => {
+			events = new LeanKitEvents( client, boardId );
+			mockApiCall( mockResponseFile );
+			boardScope = nock( url )
+				.get( "/kanban/api/boards/101" )
+				.reply( 200, { Version: 1 } );
+		} );
+
+		after( () => {
+			nock.cleanAll();
+		} );
+
+		it( "gets the board to determine the latest board version", ( done ) => {
+			events.once( eventType, ( e ) => {
+				events.stop();
+				boardScope.isDone().should.equal( true );
+				done();
+			} );
+			events.start();
+		} );
+
+		it( "defaults to 30 seconds polling", () => {
+			events.pollInterval.should.equal( 30 );
+		} );
 	} );
 
 	describe( "activity types changed event", () => {
@@ -420,52 +462,4 @@ describe( "Events Tests", function() {
 			testEventEmitter( events, eventType, done );
 		} );
 	} );
-
-	// it( "fix json file", () => {
-	// 	let boardEvent = { HasUpdates: true,
-	// AffectedLanes:
-	//  [ { Id: 63475141,
-	// 		 Description: "",
-	// 		 Index: 0,
-	// 		 Active: true,
-	// 		 Title: "ToDo",
-	// 		 CardLimit: 0,
-	// 		 ClassType: 0,
-	// 		 Type: 1,
-	// 		 ActivityId: null,
-	// 		 ActivityName: "",
-	// 		 CardContextId: 0,
-	// 		 Width: 2,
-	// 		 ParentLaneId: 0,
-	// 		 Cards: [ Object ],
-	// 		 Orientation: 0,
-	// 		 TaskBoardId: null,
-	// 		 ChildLaneIds: [],
-	// 		 SiblingLaneIds: null,
-	// 		 LaneState: "lane" } ],
-	// Events:
-	//  [ { CardId: 265149399,
-	// 		 EventType: "UserAssignmentEvent",
-	// 		 EventDateTime: "11/06/2015 03:55:52 PM",
-	// 		 Message: "Assigned user has been unassigned from the Card [Testing] by David Neal",
-	// 		 ToLaneId: 63475141,
-	// 		 FromLaneId: null,
-	// 		 RequiresBoardRefresh: false,
-	// 		 IsBlocked: false,
-	// 		 BlockedComment: null,
-	// 		 UserId: 62984826,
-	// 		 AssignedUserId: 62984826,
-	// 		 IsUnassigning: true,
-	// 		 CommentText: null,
-	// 		 WipOverrideComment: null,
-	// 		 WipOverrideLane: 0,
-	// 		 WipOverrideUser: 0,
-	// 		 TaskboardParentCardId: 0,
-	// 		 TaskboardId: 0 } ],
-	// CurrentBoardVersion: 4193,
-	// NewPayload: null };
-	// 	jetpack.write( "./test/test-files/card-user-unassigned.json", boardEvent );
-	// 	// let cardMovedEvent = jetpack.read( "./test/test-files/card-moved.json", "json" );
-	// 	// console.log( cardMovedEvent );
-	// } );
 } );
