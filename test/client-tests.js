@@ -41,15 +41,6 @@ let cardTemplate = {
 
 // fiddler proxy: "http://127.0.0.1:8888"
 
-if ( !proxy ) {
-	client = new LeanKitClient( accountName, email, pwd );
-} else {
-	process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
-	client = new LeanKitClient( accountName, email, pwd, {
-		proxy: proxy
-	} );
-}
-
 let getTestBoard = () => {
 	return when.promise( ( resolve, reject ) => {
 		if ( !board ) {
@@ -126,8 +117,19 @@ let removeTestCard = ( boardId, id ) => {
 	return client.deleteCard( boardId, id );
 };
 
-describe( "LeanKitClient", function() {
+describe.skip( "LeanKitClient", function() {
 	this.timeout( TEST_TIMEOUT );
+
+	before( () => {
+		if ( !proxy ) {
+			client = new LeanKitClient( accountName, email, pwd );
+		} else {
+			process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+			client = new LeanKitClient( accountName, email, pwd, {
+				proxy: proxy
+			} );
+		}
+	} );
 
 	describe( "Board API", () => {
 		let boards = null;

@@ -1,0 +1,28 @@
+{
+  "HasUpdates": true,
+  "AffectedLanes": [],
+  "Events": [
+    {
+      "CardId": 0,
+      "EventType": "ActivityTypesChangedEvent",
+      "EventDateTime": "11/06/2015 05:05:44 PM",
+      "Message": "David Neal changed Board API Test Board Activity Types.",
+      "ToLaneId": 0,
+      "FromLaneId": null,
+      "RequiresBoardRefresh": false,
+      "IsBlocked": false,
+      "BlockedComment": null,
+      "UserId": 0,
+      "AssignedUserId": 0,
+      "IsUnassigning": false,
+      "CommentText": null,
+      "WipOverrideComment": null,
+      "WipOverrideLane": 0,
+      "WipOverrideUser": 0,
+      "TaskboardParentCardId": 0,
+      "TaskboardId": 0
+    }
+  ],
+  "CurrentBoardVersion": 2,
+  "NewPayload": null
+}

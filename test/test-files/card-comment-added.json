@@ -1,0 +1,28 @@
+{
+  "HasUpdates": true,
+  "AffectedLanes": [],
+  "Events": [
+    {
+      "CardId": 265142046,
+      "EventType": "CommentPostEvent",
+      "EventDateTime": "11/06/2015 04:03:31 PM",
+      "Message": "Comment was posted by user David Neal at 11/6/2015 9:03:31 PM for card test 2",
+      "ToLaneId": 0,
+      "FromLaneId": null,
+      "RequiresBoardRefresh": false,
+      "IsBlocked": false,
+      "BlockedComment": null,
+      "UserId": 62984826,
+      "AssignedUserId": 0,
+      "IsUnassigning": false,
+      "CommentText": "<p>New comment</p><p>",
+      "WipOverrideComment": null,
+      "WipOverrideLane": 0,
+      "WipOverrideUser": 0,
+      "TaskboardParentCardId": 0,
+      "TaskboardId": 0
+    }
+  ],
+  "CurrentBoardVersion": 2,
+  "NewPayload": null
+}

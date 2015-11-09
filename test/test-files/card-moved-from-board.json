@@ -1,0 +1,52 @@
+{
+  "HasUpdates": true,
+  "AffectedLanes": [
+    {
+      "Id": 63475142,
+      "Description": "",
+      "Index": 1,
+      "Active": true,
+      "Title": "Doing",
+      "CardLimit": 4,
+      "ClassType": 0,
+      "Type": 2,
+      "ActivityId": null,
+      "ActivityName": "",
+      "CardContextId": 0,
+      "Width": 2,
+      "ParentLaneId": 0,
+      "Cards": [
+        null
+      ],
+      "Orientation": 0,
+      "TaskBoardId": null,
+      "ChildLaneIds": [],
+      "SiblingLaneIds": null,
+      "LaneState": "lane"
+    }
+  ],
+  "Events": [
+    {
+      "CardId": 265142046,
+      "EventType": "CardMoveFromBoardEvent",
+      "EventDateTime": "11/06/2015 04:59:55 PM",
+      "Message": "David Neal moved the Card [test 2] from Board [API Test Board] Lane [Doing] to Board [Another Sample Board] Lane [New Requests].",
+      "ToLaneId": 256850861,
+      "FromLaneId": 63475142,
+      "RequiresBoardRefresh": false,
+      "IsBlocked": false,
+      "BlockedComment": null,
+      "UserId": 62984826,
+      "AssignedUserId": 0,
+      "IsUnassigning": false,
+      "CommentText": null,
+      "WipOverrideComment": null,
+      "WipOverrideLane": 0,
+      "WipOverrideUser": 0,
+      "TaskboardParentCardId": 0,
+      "TaskboardId": 0
+    }
+  ],
+  "CurrentBoardVersion": 2,
+  "NewPayload": null
+}

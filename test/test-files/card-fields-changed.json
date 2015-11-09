@@ -1,0 +1,52 @@
+{
+  "HasUpdates": true,
+  "AffectedLanes": [
+    {
+      "Id": 63475141,
+      "Description": "",
+      "Index": 0,
+      "Active": true,
+      "Title": "ToDo",
+      "CardLimit": 0,
+      "ClassType": 0,
+      "Type": 1,
+      "ActivityId": null,
+      "ActivityName": "",
+      "CardContextId": 0,
+      "Width": 2,
+      "ParentLaneId": 0,
+      "Cards": [
+        null
+      ],
+      "Orientation": 0,
+      "TaskBoardId": null,
+      "ChildLaneIds": [],
+      "SiblingLaneIds": null,
+      "LaneState": "lane"
+    }
+  ],
+  "Events": [
+    {
+      "CardId": 265149399,
+      "EventType": "CardFieldsChangedEvent",
+      "EventDateTime": "11/06/2015 03:49:19 PM",
+      "Message": "David Neal changed the Card [Testing].",
+      "ToLaneId": 63475141,
+      "FromLaneId": null,
+      "RequiresBoardRefresh": false,
+      "IsBlocked": false,
+      "BlockedComment": null,
+      "UserId": 62984826,
+      "AssignedUserId": 0,
+      "IsUnassigning": false,
+      "CommentText": null,
+      "WipOverrideComment": null,
+      "WipOverrideLane": 0,
+      "WipOverrideUser": 0,
+      "TaskboardParentCardId": 0,
+      "TaskboardId": 0
+    }
+  ],
+  "CurrentBoardVersion": 2,
+  "NewPayload": null
+}

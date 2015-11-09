@@ -35,6 +35,7 @@
   "main": "./leankit-client.js",
   "dependencies": {
     "babel": "~5.0",
+    "change-case": "^2.3.0",
     "lodash": "~2.4.0",
     "request-json": "~0.5.2",
     "when": "~3.7.4"
@@ -42,6 +43,7 @@
   "devDependencies": {
     "chai": "*",
     "chai-as-promised": "*",
+    "fs-jetpack": "^0.7.0",
     "mocha": "*",
     "nock": "*"
   },
