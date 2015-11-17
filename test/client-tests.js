@@ -160,8 +160,10 @@ describe( "LeanKitClient", function() {
 
 		it( "should return a valid board by name", ( done ) => {
 			client.getBoardByName( boardToFind, ( err, res ) => {
+				should.not.exist( err );
+				should.exist( res );
 				res.Title.should.equal( boardToFind );
-				res.BoardUsers.length.should.be.above( 0 );
+				res.Lanes.length.should.be.above( 0 );
 				board = res;
 				done();
 			} );
@@ -235,7 +237,7 @@ describe( "LeanKitClient", function() {
 		it( "should return a valid board by name", ( done ) => {
 			return client.getBoardByName( boardToFind ).then( ( res ) => {
 				res.Title.should.equal( boardToFind );
-				res.BoardUsers.length.should.be.above( 0 );
+				res.Lanes.length.should.be.above( 0 );
 				board = res;
 			}, ( err ) => {
 				should.not.exist( err );
@@ -332,15 +334,6 @@ describe( "LeanKitClient", function() {
 				testCardId = res.CardId;
 				done();
 			} );
-
-			// client.addCard( board.Id, lane.Id, 0, card ).then( ( res ) => {
-			// 	should.exist( res );
-			// 	res.CardId.should.be.above( 0 );
-			// 	testCardId = res.CardId;
-			// }, ( err ) => {
-			// 	console.error( err );
-			// 	should.not.exist( err );
-			// } ).should.notify( done );
 		} );
 
 		it( "should add multiple cards without error", function( done ) {
@@ -382,6 +375,8 @@ describe( "LeanKitClient", function() {
 		it( "should return the test card by ID", ( done ) => {
 			should.exist( board );
 			client.getCard( board.Id, testCardId, ( err, res ) => {
+				should.not.exist( err );
+				should.exist( res );
 				testCard = res;
 				testCard.Id.should.equal( testCardId );
 				done();
@@ -408,8 +403,11 @@ describe( "LeanKitClient", function() {
 			// Find first active lane
 			let lane = _.find( boardIdentifiers.Lanes, {
 				LaneClassType: 0,
-				Index: 1
+				LaneType: 1,
+				ClassType: 0,
+				Index: 0
 			} );
+			should.exist( lane );
 			let position = 0;
 			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing...", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
@@ -501,6 +499,7 @@ describe( "LeanKitClient", function() {
 		} );
 
 		it( "addComment() should add a comment without error", ( done ) => {
+			should.exist( testCard );
 			testCard.Id.should.be.above( 0 );
 			client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment.", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
@@ -688,8 +687,11 @@ describe( "LeanKitClient", function() {
 			// Find first active lane
 			let lane = _.find( boardIdentifiers.Lanes, {
 				LaneClassType: 0,
-				Index: 1
+				LaneType: 1,
+				ClassType: 0,
+				Index: 0
 			} );
+			should.exist( lane );
 			let position = 0;
 			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing..." ).then( ( res ) => {
 				res.ReplyCode.should.equal( 202 );
@@ -1302,8 +1304,12 @@ describe( "LeanKitClient", function() {
 				SortOrder: 0
 			};
 			client.searchCards( board.Id, searchOptions, ( err, res ) => {
-				res.Results.length.should.be.above( 2 );
-				res.TotalResults.should.be.above( 2 );
+				should.not.exist( err );
+				should.exist( res );
+				res.should.have.property( "Results" );
+				res.should.have.property( "TotalResults" );
+				res.should.have.property( "Page" );
+				res.should.have.property( "MaxResults" );
 				done();
 			} );
 		} );
@@ -1326,34 +1332,51 @@ describe( "LeanKitClient", function() {
 				SortOrder: 0
 			};
 			return client.searchCards( board.Id, searchOptions ).then( ( res ) => {
-				res.Results.length.should.be.above( 2 );
-				res.TotalResults.should.be.above( 2 );
+				should.exist( res );
+				res.should.have.property( "Results" );
+				res.should.have.property( "TotalResults" );
+				res.should.have.property( "Page" );
+				res.should.have.property( "MaxResults" );
 			} );
 		} );
 	} );
 
 	describe( "Board Updates API", () => {
+		let board = null;
+
+		before( () => {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+			} );
+		} );
+
 		it( "getNewCards() should get cards without error", ( done ) => {
 			client.getNewCards( board.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
-				res.length.should.be.above( 0 );
-				res[ 0 ].should.have.property( "Id" );
-				res[ 0 ].should.have.property( "LaneId" );
-				res[ 0 ].should.have.property( "TypeName" );
+				res.should.be.instanceOf( Array );
+				if ( res.length > 0 ) {
+					res[ 0 ].should.have.property( "Id" );
+					res[ 0 ].should.have.property( "LaneId" );
+					res[ 0 ].should.have.property( "TypeName" );
+				}
 				done();
 			} );
 		} );
 
 		it( "getNewerIfExists() should return a newer board", ( done ) => {
-			client.getNewerIfExists( board.Id, board.Version, ( err, res ) => {
-				res.Version.should.be.above( board.Version );
+			var version = board.Version - 1;
+			client.getNewerIfExists( board.Id, version, ( err, res ) => {
+				should.not.exist( err );
+				should.exist( res );
+				res.Version.should.be.above( version );
 				done();
 			} );
 		} );
 
 		it( "getBoardHistorySince() should return newer cards", ( done ) => {
-			client.getBoardHistorySince( board.Id, board.Version, ( err, res ) => {
+			var version = board.Version - 1;
+			client.getBoardHistorySince( board.Id, version, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
 				res.should.be.instanceOf( Array );
@@ -1365,7 +1388,8 @@ describe( "LeanKitClient", function() {
 		} );
 
 		it( "getBoardUpdates() should return all recent updates", ( done ) => {
-			client.getBoardUpdates( board.Id, board.Version, ( err, res ) => {
+			var version = board.Version - 1;
+			client.getBoardUpdates( board.Id, version, ( err, res ) => {
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
 				res.Events.length.should.be.above( 0 );
@@ -1375,26 +1399,38 @@ describe( "LeanKitClient", function() {
 	} );
 
 	describe( "Board Updates Promises API", () => {
+		let board = null;
+
+		before( () => {
+			return getTestBoard().then( ( res ) => {
+				board = res.board;
+			} );
+		} );
+
 		it( "getNewCards() should get cards without error", ( done ) => {
 			return client.getNewCards( board.Id ).then( ( res ) => {
 				should.exist( res );
-				res.should.have.length.above( 0 );
-				res[ 0 ].should.have.property( "Id" );
-				res[ 0 ].should.have.property( "LaneId" );
-				res[ 0 ].should.have.property( "TypeName" );
+				res.should.be.instanceOf( Array );
+				if ( res.length > 0 ) {
+					res[ 0 ].should.have.property( "Id" );
+					res[ 0 ].should.have.property( "LaneId" );
+					res[ 0 ].should.have.property( "TypeName" );
+				}
 			}, ( err ) => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
 		it( "getNewerIfExists() should return a newer board", () => {
-			return client.getNewerIfExists( board.Id, board.Version )
+			var version = board.Version - 1;
+			return client.getNewerIfExists( board.Id, version )
 				.should.eventually.have.property( "Version" )
-				.that.is.above( board.Version );
+				.that.is.above( version );
 		} );
 
 		it( "getBoardHistorySince() should return newer cards", ( done ) => {
-			client.getBoardHistorySince( board.Id, board.Version ).then( ( res ) => {
+			var version = board.Version - 1;
+			client.getBoardHistorySince( board.Id, version ).then( ( res ) => {
 				should.exist( res );
 				res.should.be.instanceOf( Array );
 				res.length.should.be.above( 0 );
@@ -1406,7 +1442,8 @@ describe( "LeanKitClient", function() {
 		} );
 
 		it( "getBoardUpdates() should return all recent updates", ( done ) => {
-			client.getBoardUpdates( board.Id, board.Version ).then( ( res ) => {
+			var version = board.Version - 1;
+			client.getBoardUpdates( board.Id, version ).then( ( res ) => {
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
 				res.Events.length.should.be.above( 0 );
