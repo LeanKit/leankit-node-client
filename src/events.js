@@ -96,6 +96,7 @@ export default class LeanKitNotifier extends EventEmitter {
 	stop() {
 		if ( this.timer ) {
 			clearTimeout( this.timer );
+			this.timer = 0;
 		}
 	}
 

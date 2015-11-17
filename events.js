@@ -26,8 +26,8 @@ var LeanKitNotifier = (function (_EventEmitter) {
 		this.timer = 0;
 		this.client = client;
 		this.boardId = boardId;
-		this.version = version || 1;
-		this.pollInterval = pollInterval || 5;
+		this.version = version || 0;
+		this.pollInterval = pollInterval || 30;
 		// super.call( this );
 	}
 
@@ -59,39 +59,50 @@ var LeanKitNotifier = (function (_EventEmitter) {
 			var _this2 = this;
 
 			this.timer = 0;
-			_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", this).call(this, "polling", { id: this.boardId, version: this.version });
-			this.client.getBoardUpdates(this.boardId, this.version, function (err, res) {
-				if (err) {
-					_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, "error", err);
-					if (typeof callback === "function") {
-						callback(err);
+			if (this.version === 0) {
+				this.client.getBoard(this.boardId, function (err, board) {
+					if (err) {
+						throw err;
+					} else {
+						_this2.version = board.Version;
+						_this2.getUpdates(callback);
 					}
-				} else if (res.HasUpdates) {
-					(function () {
-						_this2.version = res.CurrentBoardVersion;
-						var events = [];
-						res.Events.forEach(function (e) {
-							var n = _this2.camelClone(e);
-							n.boardVersion = _this2.version;
-							n.eventType = changeCase.param(e.EventType).replace("-event", "");
-							if (n.eventType === "board-edit" && res.NewPayload) {
-								n.board = _this2.camelClone(res.NewPayload);
-								// console.log( n );
-							}
-							events.push(n);
-							_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, n.eventType, n);
-						});
-
+				});
+			} else {
+				_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", this).call(this, "polling", { id: this.boardId, version: this.version });
+				this.client.getBoardUpdates(this.boardId, this.version, function (err, res) {
+					if (err) {
+						_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, "error", err);
 						if (typeof callback === "function") {
-							callback(null, events);
-						} else {
-							_this2.timer = _this2.waitForNextPoll();
+							callback(err);
 						}
-					})();
-				} else {
-					_this2.timer = _this2.waitForNextPoll();
-				}
-			});
+					} else if (res.HasUpdates) {
+						(function () {
+							_this2.version = res.CurrentBoardVersion;
+							var events = [];
+							res.Events.forEach(function (e) {
+								var n = _this2.camelClone(e);
+								n.boardVersion = _this2.version;
+								n.eventType = changeCase.param(e.EventType).replace("-event", "");
+								if (n.eventType === "board-edit" && res.NewPayload) {
+									n.board = _this2.camelClone(res.NewPayload);
+									// console.log( n );
+								}
+								events.push(n);
+								_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, n.eventType, n);
+							});
+
+							if (typeof callback === "function") {
+								callback(null, events);
+							} else {
+								_this2.timer = _this2.waitForNextPoll();
+							}
+						})();
+					} else {
+						_this2.timer = _this2.waitForNextPoll();
+					}
+				});
+			}
 		}
 	}, {
 		key: "start",
@@ -118,6 +129,7 @@ var LeanKitNotifier = (function (_EventEmitter) {
 		value: function stop() {
 			if (this.timer) {
 				clearTimeout(this.timer);
+				this.timer = 0;
 			}
 		}
 	}]);

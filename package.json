@@ -41,14 +41,17 @@
     "when": "~3.7.4"
   },
   "devDependencies": {
-    "chai": "*",
-    "chai-as-promised": "*",
+    "chai": "^3.4.1",
+    "chai-as-promised": "^5.1.0",
     "fs-jetpack": "^0.7.0",
-    "mocha": "*",
-    "nock": "*"
+    "mocha": "^2.3.3",
+    "nock": "^3.1.0",
+    "sinon": "^1.17.2"
   },
   "scripts": {
-    "test": "mocha --compilers js:babel/register --reporter spec",
+    "test": "./node_modules/mocha/bin/mocha --compilers js:babel/register --reporter spec",
+    "test-events": "./node_modules/mocha/bin/mocha ./test/event-tests.js --compilers js:babel/register --reporter spec",
+    "test-client": "./node_modules/mocha/bin/mocha ./test/client-tests.js --compilers js:babel/register --reporter spec",
     "compile": "babel ./src --out-dir ./"
   },
   "repository": {

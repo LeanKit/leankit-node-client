@@ -88,9 +88,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 			p.then(function (res) {
 				return callback(null, res);
 			}, function (err) {
-				return callback(err, null);
-			})["catch"](function (err) {
-				return callback(err, null);
+				return callback(err);
 			});
 		} else {
 			return p;
@@ -195,8 +193,8 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 						return b.Title === boardToFind;
 					});
 					if (board && board.Id > 0) {
-						_this.getBoard(board.Id).then(function (board) {
-							resolve(board);
+						_this.getBoard(board.Id).then(function (b) {
+							resolve(b);
 						}, function (err) {
 							reject(err);
 						});
@@ -213,7 +211,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (typeof callback === "function") {
 			p.then(function (board) {
 				return callback(null, board);
-			})["catch"](function (err) {
+			}, function (err) {
 				return callback(err);
 			});
 		} else {
@@ -237,7 +235,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (typeof callback === "function") {
 			p.then(function (data) {
 				return callback(null, data);
-			})["catch"](function (err) {
+			}, function (err) {
 				return callback(err);
 			});
 		} else {

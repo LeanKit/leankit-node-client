@@ -82,9 +82,7 @@ let LeanKitClient = function( account, email, password, options ) {
 			p.then( ( res ) => {
 				return callback( null, res );
 			}, ( err ) => {
-				return callback( err, null );
-			} ).catch( ( err ) => {
-				return callback( err, null );
+				return callback( err );
 			} );
 		} else {
 			return p;
@@ -176,7 +174,7 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let getBoard = function( boardId, callback ) {
-		return clientGet( "boards/" + boardId, callback );
+		return clientGet( `boards/${boardId}`, callback );
 	};
 
 	let getBoardByName = function( boardToFind, callback ) {
@@ -187,8 +185,8 @@ let LeanKitClient = function( account, email, password, options ) {
 						return b.Title === boardToFind;
 					} );
 					if ( board && board.Id > 0 ) {
-						this.getBoard( board.Id ).then( ( board ) => {
-							resolve( board );
+						this.getBoard( board.Id ).then( ( b ) => {
+							resolve( b );
 						}, ( err ) => {
 							reject( err );
 						} );
@@ -205,7 +203,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		if ( typeof callback === "function" ) {
 			p.then( ( board ) => {
 				return callback( null, board );
-			} ).catch( ( err ) => {
+			}, ( err ) => {
 				return callback( err );
 			} );
 		} else {
@@ -218,7 +216,7 @@ let LeanKitClient = function( account, email, password, options ) {
 			if ( boardId in boardIdentifiers ) {
 				resolve( boardIdentifiers[boardId] );
 			} else {
-				clientGet( "board/" + boardId + "/GetBoardIdentifiers" ).then( ( data ) => {
+				clientGet( `board/${boardId}/GetBoardIdentifiers` ).then( ( data ) => {
 					boardIdentifiers[boardId] = data;
 					resolve( data );
 				}, ( err ) => {
@@ -229,7 +227,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		if ( typeof callback === "function" ) {
 			p.then( ( data ) => {
 				return callback( null, data );
-			} ).catch( ( err ) => {
+			}, ( err ) => {
 				return callback( err );
 			} );
 		} else {
@@ -238,35 +236,35 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let getBoardBacklogLanes = function( boardId, callback ) {
-		return clientGet( "board/" + boardId + "/backlog", callback );
+		return clientGet( `board/${boardId}/backlog`, callback );
 	};
 
 	let getBoardArchiveLanes = function( boardId, callback ) {
-		return clientGet( "board/" + boardId + "/archive", callback );
+		return clientGet( `board/${boardId}/archive`, callback );
 	};
 
 	let getBoardArchiveCards = function( boardId, callback ) {
-		return clientGet( "board/" + boardId + "/archivecards", callback );
+		return clientGet( `board/${boardId}/archivecards`, callback );
 	};
 
 	let getNewerIfExists = function( boardId, version, callback ) {
-		return clientGet( "board/" + boardId + "/boardversion/" + version + "/getnewerifexists", callback );
+		return clientGet( `board/${boardId}/boardversion/${version}/getnewerifexists`, callback );
 	};
 
 	let getBoardHistorySince = function( boardId, version, callback ) {
-		return clientGet( "board/" + boardId + "/boardversion/" + version + "/getboardhistorysince", callback );
+		return clientGet( `board/${boardId}/boardversion/${version}/getboardhistorysince`, callback );
 	};
 
 	let getBoardUpdates = function( boardId, version, callback ) {
-		return clientGet( "board/" + boardId + "/boardversion/" + version + "/checkforupdates", callback );
+		return clientGet( `board/${boardId}/boardversion/${version}/checkforupdates`, callback );
 	};
 
 	let getCard = function( boardId, cardId, callback ) {
-		return clientGet( "board/" + boardId + "/getcard/" + cardId, callback );
+		return clientGet( `board/${boardId}/getcard/${cardId}`, callback );
 	};
 
 	let getCardByExternalId = function( boardId, externalCardId, callback ) {
-		return clientGet( "board/" + boardId + "/getcardbyexternalid/" + encodeURIComponent( externalCardId ), callback );
+		return clientGet( `board/${boardId}/getcardbyexternalid/${encodeURIComponent( externalCardId )}`, callback );
 	};
 
 	let addCard = function( boardId, laneId, position, card, callback ) {
@@ -275,7 +273,7 @@ let LeanKitClient = function( account, email, password, options ) {
 
 	let addCardWithWipOverride = function( boardId, laneId, position, wipOverrideReason, card, callback ) {
 		card.UserWipOverrideComment = wipOverrideReason;
-		return clientPost( "board/" + boardId + "/AddCardWithWipOverride/Lane/" + laneId + "/Position/" + position, card, callback );
+		return clientPost( `board/${boardId}/AddCardWithWipOverride/Lane/${laneId}/Position/${position}`, card, callback );
 	};
 
 	let addCards = function( boardId, cards, callback ) {
@@ -283,28 +281,28 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let addCardsWithWipOverride = function( boardId, cards, wipOverrideReason, callback ) {
-		return clientPost( "board/" + boardId + "/AddCards?wipOverrideComment=" + encodeURIComponent( wipOverrideReason ), cards, callback );
+		return clientPost( `board/${boardId}/AddCards?wipOverrideComment=${encodeURIComponent( wipOverrideReason )}`, cards, callback );
 	};
 
 	let moveCard = function( boardId, cardId, toLaneId, position, wipOverrideReason, callback ) {
-		return clientPost( "board/" + boardId + "/movecardwithwipoverride/" + cardId + "/lane/" + toLaneId + "/position/" + position, {
+		return clientPost( `board/${boardId}/movecardwithwipoverride/${cardId}/lane/${toLaneId}/position/${position}`, {
 			comment: wipOverrideReason
 		}, callback );
 	};
 
 	let moveCardByExternalId = function( boardId, externalCardId, toLaneId, position, wipOverrideReason, callback ) {
-		return clientPost( "board/" + boardId + "/movecardbyexternalid/" + encodeURIComponent( externalCardId ) + "/lane/" + toLaneId + "/position/" + position, {
+		return clientPost( `board/${boardId}/movecardbyexternalid/${encodeURIComponent( externalCardId )}/lane/${toLaneId}/position/${position}`, {
 			comment: wipOverrideReason
 		}, callback );
 	};
 
 	let moveCardToBoard = function( cardId, destinationBoardId, callback ) {
-		return clientPost( "card/movecardtoanotherboard/" + cardId + "/" + destinationBoardId, null, callback );
+		return clientPost( `card/movecardtoanotherboard/${cardId}/${destinationBoardId}`, null, callback );
 	};
 
 	let updateCard = function( boardId, card, callback ) {
 		card.UserWipOverrideComment = defaultWipOverrideReason;
-		return clientPost( "board/" + boardId + "/UpdateCardWithWipOverride", card, callback );
+		return clientPost( `board/${boardId}/UpdateCardWithWipOverride`, card, callback );
 	};
 
 	let updateCardFields = function( updateFields, callback ) {
@@ -312,11 +310,11 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let updateCards = function( boardId, cards, callback ) {
-		return clientPost( "board/" + boardId + "/updatecards?wipoverridecomment=" + encodeURIComponent( defaultWipOverrideReason ), cards, callback );
+		return clientPost( `board/${boardId}/updatecards?wipoverridecomment=${encodeURIComponent( defaultWipOverrideReason )}`, cards, callback );
 	};
 
 	let getComments = function( boardId, cardId, callback ) {
-		return clientGet( "card/getcomments/" + boardId + "/" + cardId, callback );
+		return clientGet( `card/getcomments/${boardId}/${cardId}`, callback );
 	};
 
 	let addComment = function( boardId, cardId, userId, comment, callback ) {
@@ -325,7 +323,7 @@ let LeanKitClient = function( account, email, password, options ) {
 			PostedById: userId,
 			Text: comment
 		};
-		return clientPost( "card/savecomment/" + boardId + "/" + cardId, data, callback );
+		return clientPost( `card/savecomment/${boardId}/${cardId}`, data, callback );
 	};
 
 	let addCommentByExternalId = function( boardId, externalCardId, userId, comment, callback ) {
@@ -334,73 +332,73 @@ let LeanKitClient = function( account, email, password, options ) {
 			PostedById: userId,
 			Text: comment
 		};
-		return clientPost( "card/savecommentbyexternalid/" + boardId + "/" + encodeURIComponent( externalCardId ), data, callback );
+		return clientPost( `card/savecommentbyexternalid/${boardId}/${encodeURIComponent( externalCardId )}`, data, callback );
 	};
 
 	let getCardHistory = function( boardId, cardId, callback ) {
-		return clientGet( "card/history/" + boardId + "/" + cardId, callback );
+		return clientGet( `card/history/${boardId}/${cardId}`, callback );
 	};
 
 	let searchCards = function( boardId, options, callback ) {
-		return clientPost( "board/" + boardId + "/searchcards", options, callback );
+		return clientPost( `board/${boardId}/searchcards`, options, callback );
 	};
 
 	let getNewCards = function( boardId, callback ) {
-		return clientGet( "board/" + boardId + "/listnewcards", callback );
+		return clientGet( `board/${boardId}/listnewcards`, callback );
 	};
 
 	let deleteCard = function( boardId, cardId, callback ) {
-		return clientPost( "board/" + boardId + "/deletecard/" + cardId, null, callback );
+		return clientPost( `board/${boardId}/deletecard/${cardId}`, null, callback );
 	};
 
 	let deleteCards = function( boardId, cardIds, callback ) {
-		return clientPost( "board/" + boardId + "/deletecards", cardIds, callback );
+		return clientPost( `board/${boardId}/deletecards`, cardIds, callback );
 	};
 
 	let getTaskboard = function( boardId, cardId, callback ) {
-		return clientGet( "v1/board/" + boardId + "/card/" + cardId + "/taskboard", callback );
+		return clientGet( `v1/board/${boardId}/card/${cardId}/taskboard`, callback );
 	};
 
 	let addTask = function( boardId, cardId, taskCard, callback ) {
 		taskCard.UserWipOverrideComment = defaultWipOverrideReason;
-		return clientPost( "v1/board/" + boardId + "/card/" + cardId + "/tasks/lane/" + taskCard.LaneId + "/position/" + taskCard.Index, taskCard, callback );
+		return clientPost( `v1/board/${boardId}/card/${cardId}/tasks/lane/${taskCard.LaneId}/position/${taskCard.Index}`, taskCard, callback );
 	};
 
 	let updateTask = function( boardId, cardId, taskCard, callback ) {
 		taskCard.UserWipOverrideComment = defaultWipOverrideReason;
-		return clientPost( "v1/board/" + boardId + "/update/card/" + cardId + "/tasks/" + taskCard.Id, taskCard, callback );
+		return clientPost( `v1/board/${boardId}/update/card/${cardId}/tasks/${taskCard.Id}`, taskCard, callback );
 	};
 
 	let deleteTask = function( boardId, cardId, taskId, callback ) {
-		return clientPost( "v1/board/" + boardId + "/delete/card/" + cardId + "/tasks/" + taskId, null, callback );
+		return clientPost( `v1/board/${boardId}/delete/card/${cardId}/tasks/${taskId}`, null, callback );
 	};
 
 	let getTaskBoardUpdates = function( boardId, cardId, version, callback ) {
-		return clientGet( "v1/board/" + boardId + "/card/" + cardId + "/tasks/boardversion/" + version, callback );
+		return clientGet( `v1/board/${boardId}/card/${cardId}/tasks/boardversion/${version}`, callback );
 	};
 
 	let moveTask = function( boardId, cardId, taskId, toLaneId, position, callback ) {
-		return clientPost( "v1/board/" + boardId + "/move/card/" + cardId + "/tasks/" + taskId + "/lane/" + toLaneId + "/position/" + position, null, callback );
+		return clientPost( `v1/board/${boardId}/move/card/${cardId}/tasks/${taskId}/lane/${toLaneId}/position/${position}`, null, callback );
 	};
 
 	let getAttachmentCount = function( boardId, cardId, callback ) {
-		return clientGet( "card/GetAttachmentsCount/" + boardId + "/" + cardId, callback );
+		return clientGet( `card/GetAttachmentsCount/${boardId}/${cardId}`, callback );
 	};
 
 	let getAttachments = function( boardId, cardId, callback ) {
-		return clientGet( "card/GetAttachments/" + boardId + "/" + cardId, callback );
+		return clientGet( `card/GetAttachments/${boardId}/${cardId}`, callback );
 	};
 
 	let getAttachment = function( boardId, cardId, attachmentId, callback ) {
-		return clientGet( "card/GetAttachments/" + boardId + "/" + cardId + "/" + attachmentId, callback );
+		return clientGet( `card/GetAttachments/${boardId}/${cardId}/${attachmentId}`, callback );
 	};
 
 	let downloadAttachment = function( boardId, attachmentId, filePath, callback ) {
-		return clientSaveFile( "card/DownloadAttachment/" + boardId + "/" + attachmentId, filePath, callback );
+		return clientSaveFile( `card/DownloadAttachment/${boardId}/${attachmentId}`, filePath, callback );
 	};
 
 	let deleteAttachment = function( boardId, cardId, attachmentId, callback ) {
-		return clientPost( "card/DeleteAttachment/" + boardId + "/" + cardId + "/" + attachmentId, null, callback );
+		return clientPost( `card/DeleteAttachment/${boardId}/${cardId}/${attachmentId}`, null, callback );
 	};
 
 	let addAttachment = function( boardId, cardId, description, file, callback ) {
@@ -415,7 +413,7 @@ let LeanKitClient = function( account, email, password, options ) {
 			Description: description,
 			FileName: fileName
 		};
-		return clientSendFile( "card/SaveAttachment/" + boardId + "/" + cardId, file, attachmentData, callback );
+		return clientSendFile( `card/SaveAttachment/${boardId}/${cardId}`, file, attachmentData, callback );
 	};
 
 	let defaultWipOverrideReason = "WIP Override performed by external system";
