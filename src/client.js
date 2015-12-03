@@ -14,18 +14,30 @@ let LeanKitClient = function( account, email, password, options ) {
 
 	let parseReplyData = function( error, response, callback, cacheCallback ) {
 		if ( error ) {
-			return callback( error, response );
+			if ( error instanceof Error ) {
+				return callback( error, response );
+			} else {
+				let err = new Error( error.toString() );
+				err.name = "clientRequestError";
+				return callback( err, response );
+			}
 		} else if ( response && response.ReplyCode && response.ReplyCode > 399 ) {
-			return callback( { replyText: response.ReplyText, replyCode: response.ReplyCode }, response );
+			let err = new Error( response.ReplyText || "apiError" );
+			err.name = "apiError";
+			err.httpStatusCode = response.ReplyCode;
+			err.replyCode = response.ReplyCode;
+			err.replyText = response.ReplyText;
+			err.replyData = response.ReplyData;
+			return callback( err );
 		} else if ( response && response.ReplyCode !== 200 && response.ReplyCode !== 201 ) {
-			return callback( error, response );
+			return callback( null, response );
 		} else if ( response.ReplyData && response.ReplyData.length > 0 ) {
 			if ( typeof cacheCallback === "function" ) {
 				cacheCallback( response.ReplyData[0] );
 			}
-			return callback( error, response.ReplyData[0] );
+			return callback( null, response.ReplyData[0] );
 		} else {
-			return callback( error, response );
+			return callback( null, response );
 		}
 	};
 
@@ -62,10 +74,16 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let clientGet = function( path, callback ) {
-		let p = when.promise( ( resolve, reject ) => {
+		let p = new Promise( ( resolve, reject ) => {
 			client.get( path, ( err, res, body ) => {
 				if ( err ) {
-					reject( err );
+					if ( err instanceof Error ) {
+						reject( err );
+					} else {
+						let error = new Error( "httpGetError" );
+						error.details = err;
+						reject( error );
+					}
 				} else {
 					parseReplyData( err, body, ( parseErr, parsed ) => {
 						if ( !parseErr ) {

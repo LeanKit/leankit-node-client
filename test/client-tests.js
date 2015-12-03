@@ -1454,7 +1454,7 @@ describe( "LeanKitClient", function() {
 	} );
 
 	describe( "Errors", () => {
-		before( () => {
+		beforeEach( () => {
 			let url = accountName.startsWith( "http" ) ?
 				accountName :
 				"https://" + accountName + ".leankit.com";
@@ -1470,7 +1470,7 @@ describe( "LeanKitClient", function() {
 					ReplyCode: 503,
 				ReplyText: "Some useful message here." } );
 		} );
-		after( () => {
+		afterEach( () => {
 			nock.cleanAll();
 		} );
 
@@ -1478,9 +1478,31 @@ describe( "LeanKitClient", function() {
 			return client.getBoards( ( err, res ) => {
 				should.exist( err );
 				should.not.exist( res );
-				err.replyCode.should.equal( 503 );
+				err.should.have.property( "replyCode" ).that.is.equal( 503 );
 				done();
 			} );
+		} );
+
+		it( "should handle promise rejection", () => {
+			return client.getBoards()
+				.then( ( res ) => {
+					"this".should.not.equal( "this" );
+					should.not.exist( res );
+				}, ( err ) => {
+					should.exist( err );
+					err.should.have.property( "replyCode" ).that.is.equal( 503 );
+				} );
+		} );
+
+		it( "should handle another promise rejection", () => {
+			return client.getBoards()
+				.then( ( res ) => {
+					"this".should.not.equal( "this" );
+					should.not.exist( res );
+				}, ( err ) => {
+					should.exist( err );
+					err.should.have.property( "replyCode" ).that.is.equal( 503 );
+				} );
 		} );
 	} );
 
