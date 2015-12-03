@@ -15,7 +15,7 @@
     }
   ],
   "license": "SEE LICENSE IN https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
@@ -36,7 +36,6 @@
   "dependencies": {
     "babel": "~5.0",
     "change-case": "^2.3.0",
-    "lodash": "~2.4.0",
     "request-json": "~0.5.2",
     "when": "~3.7.4"
   },
@@ -44,6 +43,7 @@
     "chai": "^3.4.1",
     "chai-as-promised": "^5.1.0",
     "fs-jetpack": "^0.7.0",
+    "lodash": "~2.4.0",
     "mocha": "^2.3.3",
     "nock": "^3.1.0",
     "sinon": "^1.17.2"

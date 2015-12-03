@@ -80,7 +80,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	};
 
 	var clientGet = function clientGet(path, callback) {
-		var p = new Promise(function (resolve, reject) {
+		var p = when.promise(function (resolve, reject) {
 			client.get(path, function (err, res, body) {
 				if (err) {
 					if (err instanceof Error) {

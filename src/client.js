@@ -74,7 +74,7 @@ let LeanKitClient = function( account, email, password, options ) {
 	};
 
 	let clientGet = function( path, callback ) {
-		let p = new Promise( ( resolve, reject ) => {
+		let p = when.promise( ( resolve, reject ) => {
 			client.get( path, ( err, res, body ) => {
 				if ( err ) {
 					if ( err instanceof Error ) {
