@@ -19,18 +19,30 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var parseReplyData = function parseReplyData(error, response, callback, cacheCallback) {
 		if (error) {
-			return callback(error, response);
+			if (error instanceof Error) {
+				return callback(error, response);
+			} else {
+				var err = new Error(error.toString());
+				err.name = "clientRequestError";
+				return callback(err, response);
+			}
 		} else if (response && response.ReplyCode && response.ReplyCode > 399) {
-			return callback({ replyText: response.ReplyText, replyCode: response.ReplyCode }, response);
+			var err = new Error(response.ReplyText || "apiError");
+			err.name = "apiError";
+			err.httpStatusCode = response.ReplyCode;
+			err.replyCode = response.ReplyCode;
+			err.replyText = response.ReplyText;
+			err.replyData = response.ReplyData;
+			return callback(err);
 		} else if (response && response.ReplyCode !== 200 && response.ReplyCode !== 201) {
-			return callback(error, response);
+			return callback(null, response);
 		} else if (response.ReplyData && response.ReplyData.length > 0) {
 			if (typeof cacheCallback === "function") {
 				cacheCallback(response.ReplyData[0]);
 			}
-			return callback(error, response.ReplyData[0]);
+			return callback(null, response.ReplyData[0]);
 		} else {
-			return callback(error, response);
+			return callback(null, response);
 		}
 	};
 
@@ -68,10 +80,16 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	};
 
 	var clientGet = function clientGet(path, callback) {
-		var p = when.promise(function (resolve, reject) {
+		var p = new Promise(function (resolve, reject) {
 			client.get(path, function (err, res, body) {
 				if (err) {
-					reject(err);
+					if (err instanceof Error) {
+						reject(err);
+					} else {
+						var error = new Error("httpGetError");
+						error.details = err;
+						reject(error);
+					}
 				} else {
 					parseReplyData(err, body, function (parseErr, parsed) {
 						if (!parseErr) {
