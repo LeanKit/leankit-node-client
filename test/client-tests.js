@@ -8,7 +8,7 @@ const TEST_TIMEOUT = 20000;
 let fs = require( "fs" );
 let _ = require( "lodash" );
 // let should = require( "should" );
-let LeanKitClient = require( "../src/client" );
+import LeanKitClient from "../src/client";
 let nock = require( "nock" );
 let accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
 let email = process.env.LEANKIT_EMAIL || "your@email.com";
@@ -282,7 +282,7 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
-	describe( "Card API", function() {
+	describe.only( "Card API", function() {
 		let testCard = null;
 		let testCardId = 0;
 		let board = null;

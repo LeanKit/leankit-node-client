@@ -1,14 +1,18 @@
 "use strict";
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
@@ -22,22 +26,24 @@ var LeanKitNotifier = (function (_EventEmitter) {
 	function LeanKitNotifier(client, boardId, version, pollInterval) {
 		_classCallCheck(this, LeanKitNotifier);
 
-		_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "constructor", this).call(this);
-		this.timer = 0;
-		this.client = client;
-		this.boardId = boardId;
-		this.version = version || 0;
-		this.pollInterval = pollInterval || 30;
+		var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LeanKitNotifier).call(this));
+
+		_this.timer = 0;
+		_this.client = client;
+		_this.boardId = boardId;
+		_this.version = version || 0;
+		_this.pollInterval = pollInterval || 30;
 		// super.call( this );
+		return _this;
 	}
 
 	_createClass(LeanKitNotifier, [{
 		key: "waitForNextPoll",
 		value: function waitForNextPoll() {
-			var _this = this;
+			var _this2 = this;
 
 			return setTimeout(function () {
-				_this.getUpdates();
+				_this2.getUpdates();
 			}, this.pollInterval * 1000);
 		}
 	}, {
@@ -46,7 +52,7 @@ var LeanKitNotifier = (function (_EventEmitter) {
 			var clone = {};
 			for (var key in obj) {
 				var val = obj[key];
-				if (val && typeof val === "object") {
+				if (val && (typeof val === "undefined" ? "undefined" : _typeof(val)) === "object") {
 					val = this.camelClone(val);
 				}
 				clone[changeCase.camel(key)] = val;
@@ -56,7 +62,7 @@ var LeanKitNotifier = (function (_EventEmitter) {
 	}, {
 		key: "getUpdates",
 		value: function getUpdates(callback) {
-			var _this2 = this;
+			var _this3 = this;
 
 			this.timer = 0;
 			if (this.version === 0) {
@@ -64,42 +70,42 @@ var LeanKitNotifier = (function (_EventEmitter) {
 					if (err) {
 						throw err;
 					} else {
-						_this2.version = board.Version;
-						_this2.getUpdates(callback);
+						_this3.version = board.Version;
+						_this3.getUpdates(callback);
 					}
 				});
 			} else {
 				_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", this).call(this, "polling", { id: this.boardId, version: this.version });
 				this.client.getBoardUpdates(this.boardId, this.version, function (err, res) {
 					if (err) {
-						_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, "error", err);
+						_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this3).call(_this3, "error", err);
 						if (typeof callback === "function") {
 							callback(err);
 						}
 					} else if (res.HasUpdates) {
 						(function () {
-							_this2.version = res.CurrentBoardVersion;
+							_this3.version = res.CurrentBoardVersion;
 							var events = [];
 							res.Events.forEach(function (e) {
-								var n = _this2.camelClone(e);
-								n.boardVersion = _this2.version;
+								var n = _this3.camelClone(e);
+								n.boardVersion = _this3.version;
 								n.eventType = changeCase.param(e.EventType).replace("-event", "");
 								if (n.eventType === "board-edit" && res.NewPayload) {
-									n.board = _this2.camelClone(res.NewPayload);
+									n.board = _this3.camelClone(res.NewPayload);
 									// console.log( n );
 								}
 								events.push(n);
-								_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this2).call(_this2, n.eventType, n);
+								_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this3).call(_this3, n.eventType, n);
 							});
 
 							if (typeof callback === "function") {
 								callback(null, events);
 							} else {
-								_this2.timer = _this2.waitForNextPoll();
+								_this3.timer = _this3.waitForNextPoll();
 							}
 						})();
 					} else {
-						_this2.timer = _this2.waitForNextPoll();
+						_this3.timer = _this3.waitForNextPoll();
 					}
 				});
 			}
@@ -112,10 +118,10 @@ var LeanKitNotifier = (function (_EventEmitter) {
 	}, {
 		key: "waitForNextUpdate",
 		value: function waitForNextUpdate() {
-			var _this3 = this;
+			var _this4 = this;
 
 			return when.promise(function (resolve, reject) {
-				_this3.getUpdates(function (err, res) {
+				_this4.getUpdates(function (err, res) {
 					if (err) {
 						reject(err);
 					} else {
@@ -137,5 +143,4 @@ var LeanKitNotifier = (function (_EventEmitter) {
 	return LeanKitNotifier;
 })(EventEmitter);
 
-exports["default"] = LeanKitNotifier;
-module.exports = exports["default"];
+exports.default = LeanKitNotifier;

@@ -4,8 +4,10 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 var path = require("path");
-var request = require("request-json");
+var request = require("request");
 var when = require("when");
+var fs = require("fs");
+var jetpack = require("fs-jetpack");
 
 var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	if (arguments.length === 2) {
@@ -13,9 +15,70 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		email = null;
 		password = null;
 	}
+
+	var buildUrl = function buildUrl(account) {
+		var url = "";
+		if (account.indexOf("http://") !== 0 && account.indexOf("https://") !== 0) {
+			url = "https://" + account;
+			// Assume leankit.com if no domain is specified
+			if (account.indexOf(".") === -1) {
+				url += ".leankit.com";
+			}
+		} else {
+			url = account;
+		}
+		if (url.indexOf("/", account.length - 1) !== 0) {
+			url += "/";
+		}
+		return url + "kanban/api/";
+	};
+
 	var boardIdentifiers = {};
 
 	options = options || {};
+
+	var defaultWipOverrideReason = "WIP Override performed by external system";
+	var url = buildUrl(account);
+	if (!options.baseUrl && !options.uri && !options.url) {
+		options.baseUrl = url;
+	}
+
+	if (options.proxy && (options.proxy.indexOf("localhost") > -1 || options.proxy.indexOf("127.0.0.1") > -1)) {
+		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+	}
+
+	if (!options.headers) {
+		options.headers = {};
+	}
+
+	if (!options.headers["User-Agent"]) {
+		var version = undefined;
+		if (jetpack.exists(__dirname + "/package.json")) {
+			var pkg = jetpack.read(__dirname + "/package.json", "json");
+			version = pkg.version;
+		} else {
+			version = "1.0.0";
+		}
+		options.headers["User-Agent"] = "leankit-node-client/" + version;
+	}
+
+	if (password) {
+		var cred = email + ":" + password;
+		var basicAuth = new Buffer(cred).toString("base64");
+		options.headers.authorization = "Basic " + basicAuth;
+	}
+
+	options.json = true;
+
+	if (!options.headers.accept) {
+		options.headers.accept = "application/json";
+	}
+
+	if (!options.headers["Content-Type"]) {
+		options.headers["Content-Type"] = "application/json";
+	}
+
+	var client = request.defaults(options);
 
 	var parseReplyData = function parseReplyData(error, response, callback, cacheCallback) {
 		if (error) {
@@ -62,23 +125,6 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		return { err: err, body: parsed };
 	};
 
-	var buildUrl = function buildUrl(account) {
-		var url = "";
-		if (account.indexOf("http://") !== 0 && account.indexOf("https://") !== 0) {
-			url = "https://" + account;
-			// Assume leankit.com if no domain is specified
-			if (account.indexOf(".") === -1) {
-				url += ".leankit.com";
-			}
-		} else {
-			url = account;
-		}
-		if (url.indexOf("/", account.length - 1) !== 0) {
-			url += "/";
-		}
-		return url + "kanban/api/";
-	};
-
 	var clientGet = function clientGet(path, callback) {
 		var p = when.promise(function (resolve, reject) {
 			client.get(path, function (err, res, body) {
@@ -105,7 +151,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (typeof callback === "function") {
 			p.then(function (res) {
 				return callback(null, res);
-			}, function (err) {
+			}).catch(function (err) {
 				return callback(err);
 			});
 		} else {
@@ -132,9 +178,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (typeof callback === "function") {
 			p.then(function (res) {
 				return callback(null, res);
-			}, function (err) {
-				return callback(err, null);
-			})["catch"](function (err) {
+			}).catch(function (err) {
 				return callback(err, null);
 			});
 		} else {
@@ -144,18 +188,13 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var clientSaveFile = function clientSaveFile(path, filePath, callback) {
 		var p = when.promise(function (resolve, reject) {
-			client.saveFile(path, filePath, function (err, res, body) {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(body);
-				}
-			});
+			var stream = client.get(path);
+			resolve(stream.pipe(fs.createWriteStream(filePath)));
 		});
 		if (typeof callback === "function") {
 			p.then(function (res) {
 				return callback(null, res);
-			}, function (err) {
+			}).catch(function (err) {
 				return callback(err);
 			});
 		} else {
@@ -163,9 +202,20 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		}
 	};
 
+	var sendFile = function sendFile(path, file, attachmentData, callback) {
+		if (typeof file === "string") {
+			attachmentData.file = fs.createReadStream(file);
+		} else {
+			attachmentData.file = file;
+		}
+		client.post({ url: path, formData: attachmentData }, function (err, res, body) {
+			callback(err, res, body);
+		});
+	};
+
 	var clientSendFile = function clientSendFile(path, file, attachmentData, callback) {
 		var p = when.promise(function (resolve, reject) {
-			client.sendFile(path, file, attachmentData, function (err, res, body) {
+			sendFile(path, file, attachmentData, function (err, res, body) {
 				if (err) {
 					reject(err);
 				} else {
@@ -181,7 +231,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (typeof callback === "function") {
 			p.then(function (res) {
 				return callback(null, res);
-			}, function (err) {
+			}).catch(function (err) {
 				return callback(err);
 			});
 		} else {
@@ -443,13 +493,6 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		return clientSendFile("card/SaveAttachment/" + boardId + "/" + cardId, file, attachmentData, callback);
 	};
 
-	var defaultWipOverrideReason = "WIP Override performed by external system";
-	var url = buildUrl(account);
-	var client = request.createClient(url, options);
-	if (password) {
-		client.setBasicAuth(email, password);
-	}
-
 	return {
 		addAttachment: addAttachment,
 		addCard: addCard,
@@ -498,5 +541,4 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	};
 };
 
-exports["default"] = LeanKitClient;
-module.exports = exports["default"];
+exports.default = LeanKitClient;
