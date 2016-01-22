@@ -1,5 +1,6 @@
 "use strict";
 
+var _arguments = arguments;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
@@ -10,8 +11,8 @@ var fs = require("fs");
 var jetpack = require("fs-jetpack");
 
 var LeanKitClient = function LeanKitClient(account, email, password, options) {
-	if (arguments.length === 2) {
-		options = arguments[1];
+	if (_arguments.length === 2) {
+		options = _arguments[1];
 		email = null;
 		password = null;
 	}
@@ -161,7 +162,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var clientPost = function clientPost(path, data, callback) {
 		var p = when.promise(function (resolve, reject) {
-			client.post(path, data, function (err, res, body) {
+			client.post(path, { body: data }, function (err, res, body) {
 				if (err) {
 					reject(err);
 				} else {
@@ -537,7 +538,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		updateCardFields: updateCardFields,
 		updateCards: updateCards,
 		updateTask: updateTask,
-		_client: client
+		_options: options
 	};
 };
 

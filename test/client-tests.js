@@ -282,7 +282,7 @@ describe( "LeanKitClient", function() {
 		} );
 	} );
 
-	describe.only( "Card API", function() {
+	describe( "Card API", function() {
 		let testCard = null;
 		let testCardId = 0;
 		let board = null;
@@ -1528,17 +1528,17 @@ describe( "LeanKitClient", function() {
 
 		it( "builds the correct url from a given account name", () => {
 			let client = new LeanKitClient( "account", "me@mycompany.com", "test" );
-			client._client.host.should.equal( "https://account.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://account.leankit.com/kanban/api/" );
 		} );
 
 		it( "builds the correct url from a given account domain name", () => {
 			let client = new LeanKitClient( "accountname.leankit.com", "me@mycompany.com", "test" );
-			client._client.host.should.equal( "https://accountname.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://accountname.leankit.com/kanban/api/" );
 		} );
 
 		it( "builds the correct url from a given url", () => {
 			let client = new LeanKitClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
-			client._client.host.should.equal( "https://mycompany.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://mycompany.leankit.com/kanban/api/" );
 		} );
 	} );
 } );

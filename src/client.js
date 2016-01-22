@@ -4,14 +4,14 @@ const when = require( "when" );
 const fs = require( "fs" );
 const jetpack = require( "fs-jetpack" );
 
-let LeanKitClient = function( account, email, password, options ) {
+const LeanKitClient = ( account, email, password, options ) => {
 	if ( arguments.length === 2 ) {
 		options = arguments[ 1 ];
 		email = null;
 		password = null;
 	}
 
-	let buildUrl = function( account ) {
+	const buildUrl = ( account ) => {
 		let url = "";
 		if ( account.indexOf( "http://" ) !== 0 && account.indexOf( "https://" ) !== 0 ) {
 			url = "https://" + account;
@@ -73,9 +73,9 @@ let LeanKitClient = function( account, email, password, options ) {
 		options.headers["Content-Type"] = "application/json";
 	}
 
-	let client = request.defaults( options );
+	const client = request.defaults( options );
 
-	let parseReplyData = function( error, response, callback, cacheCallback ) {
+	const parseReplyData = ( error, response, callback, cacheCallback ) => {
 		if ( error ) {
 			if ( error instanceof Error ) {
 				return callback( error, response );
@@ -104,7 +104,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		}
 	};
 
-	let parseBody = function( body ) {
+	const parseBody = ( body ) => {
 		let err, parsed;
 		if ( typeof body === "string" && body !== "" ) {
 			try {
@@ -119,7 +119,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		return { err: err, body: parsed };
 	};
 
-	let clientGet = function( path, callback ) {
+	const clientGet = ( path, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
 			client.get( path, ( err, res, body ) => {
 				if ( err ) {
@@ -153,9 +153,9 @@ let LeanKitClient = function( account, email, password, options ) {
 		}
 	};
 
-	let clientPost = function( path, data, callback ) {
+	const clientPost = ( path, data, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
-			client.post( path, data, ( err, res, body ) => {
+			client.post( path, { body: data }, ( err, res, body ) => {
 				if ( err ) {
 					reject( err );
 				} else {
@@ -181,7 +181,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		}
 	};
 
-	let clientSaveFile = function( path, filePath, callback ) {
+	const clientSaveFile = ( path, filePath, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
 			let stream = client.get( path );
 			resolve( stream.pipe( fs.createWriteStream( filePath ) ) );
@@ -197,7 +197,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		}
 	};
 
-	let sendFile = function( path, file, attachmentData, callback ) {
+	const sendFile = ( path, file, attachmentData, callback ) => {
 		if ( typeof file === "string" ) {
 			attachmentData.file = fs.createReadStream( file );
 		} else {
@@ -208,7 +208,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		} );
 	};
 
-	let clientSendFile = function( path, file, attachmentData, callback ) {
+	const clientSendFile = ( path, file, attachmentData, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
 			sendFile( path, file, attachmentData, ( err, res, body ) => {
 				if ( err ) {
@@ -234,7 +234,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		}
 	};
 
-	let getBoards = function( callback ) {
+	const getBoards = ( callback ) => {
 		return clientGet( "boards", callback );
 	};
 
@@ -529,7 +529,7 @@ let LeanKitClient = function( account, email, password, options ) {
 		updateCardFields: updateCardFields,
 		updateCards: updateCards,
 		updateTask: updateTask,
-		_client: client
+		_options: options
 	};
 };
 
