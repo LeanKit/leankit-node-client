@@ -187,10 +187,14 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		}
 	};
 
-	var clientSaveFile = function clientSaveFile(path, filePath, callback) {
+	var clientSaveFile = function clientSaveFile(path, file, callback) {
 		var p = when.promise(function (resolve, reject) {
-			var stream = client.get(path);
-			resolve(stream.pipe(fs.createWriteStream(filePath)));
+			var f = typeof file === "string" ? fs.createWriteStream(file) : file;
+			var res = client.get(path);
+			res.pipe(f);
+			res.on("end", function () {
+				resolve(f);
+			});
 		});
 		if (typeof callback === "function") {
 			p.then(function (res) {
@@ -253,16 +257,14 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	};
 
 	var getBoardByName = function getBoardByName(boardToFind, callback) {
-		var _this = this;
-
 		var p = when.promise(function (resolve, reject) {
-			_this.getBoards().then(function (boards) {
+			getBoards().then(function (boards) {
 				if (boards && boards.length > 0) {
 					var board = boards.find(function (b) {
 						return b.Title === boardToFind;
 					});
 					if (board && board.Id > 0) {
-						_this.getBoard(board.Id).then(function (b) {
+						getBoard(board.Id).then(function (b) {
 							resolve(b);
 						}, function (err) {
 							reject(err);
@@ -354,7 +356,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	};
 
 	var addCards = function addCards(boardId, cards, callback) {
-		return this.addCardsWithWipOverride(boardId, cards, defaultWipOverrideReason, callback);
+		return addCardsWithWipOverride(boardId, cards, defaultWipOverrideReason, callback);
 	};
 
 	var addCardsWithWipOverride = function addCardsWithWipOverride(boardId, cards, wipOverrideReason, callback) {
@@ -470,8 +472,8 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		return clientGet("card/GetAttachments/" + boardId + "/" + cardId + "/" + attachmentId, callback);
 	};
 
-	var downloadAttachment = function downloadAttachment(boardId, attachmentId, filePath, callback) {
-		return clientSaveFile("card/DownloadAttachment/" + boardId + "/" + attachmentId, filePath, callback);
+	var downloadAttachment = function downloadAttachment(boardId, attachmentId, file, callback) {
+		return clientSaveFile("card/DownloadAttachment/" + boardId + "/" + attachmentId, file, callback);
 	};
 
 	var deleteAttachment = function deleteAttachment(boardId, cardId, attachmentId, callback) {

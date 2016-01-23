@@ -181,10 +181,14 @@ const LeanKitClient = ( account, email, password, options ) => {
 		}
 	};
 
-	const clientSaveFile = ( path, filePath, callback ) => {
+	const clientSaveFile = ( path, file, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
-			let stream = client.get( path );
-			resolve( stream.pipe( fs.createWriteStream( filePath ) ) );
+			let f = ( typeof file === "string" ) ? fs.createWriteStream( file ) : file;
+			let res = client.get( path );
+			res.pipe( f );
+			res.on( "end", () => {
+				resolve( f );
+			} );
 		} );
 		if ( typeof callback === "function" ) {
 			p.then( ( res ) => {
@@ -238,23 +242,23 @@ const LeanKitClient = ( account, email, password, options ) => {
 		return clientGet( "boards", callback );
 	};
 
-	let getNewBoards = function( callback ) {
+	const getNewBoards = ( callback ) => {
 		return clientGet( "ListNewBoards", callback );
 	};
 
-	let getBoard = function( boardId, callback ) {
+	const getBoard = ( boardId, callback ) => {
 		return clientGet( `boards/${boardId}`, callback );
 	};
 
-	let getBoardByName = function( boardToFind, callback ) {
+	const getBoardByName = ( boardToFind, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
-			this.getBoards().then( ( boards ) => {
+			getBoards().then( ( boards ) => {
 				if ( boards && boards.length > 0 ) {
 					let board = boards.find( ( b ) => {
 						return b.Title === boardToFind;
 					} );
 					if ( board && board.Id > 0 ) {
-						this.getBoard( board.Id ).then( ( b ) => {
+						getBoard( board.Id ).then( ( b ) => {
 							resolve( b );
 						}, ( err ) => {
 							reject( err );
@@ -280,7 +284,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 		}
 	};
 
-	let getBoardIdentifiers = function( boardId, callback ) {
+	const getBoardIdentifiers = ( boardId, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
 			if ( boardId in boardIdentifiers ) {
 				resolve( boardIdentifiers[boardId] );
@@ -304,89 +308,89 @@ const LeanKitClient = ( account, email, password, options ) => {
 		}
 	};
 
-	let getBoardBacklogLanes = function( boardId, callback ) {
+	const getBoardBacklogLanes = ( boardId, callback ) => {
 		return clientGet( `board/${boardId}/backlog`, callback );
 	};
 
-	let getBoardArchiveLanes = function( boardId, callback ) {
+	const getBoardArchiveLanes = ( boardId, callback ) => {
 		return clientGet( `board/${boardId}/archive`, callback );
 	};
 
-	let getBoardArchiveCards = function( boardId, callback ) {
+	const getBoardArchiveCards = ( boardId, callback ) => {
 		return clientGet( `board/${boardId}/archivecards`, callback );
 	};
 
-	let getNewerIfExists = function( boardId, version, callback ) {
+	const getNewerIfExists = ( boardId, version, callback ) => {
 		return clientGet( `board/${boardId}/boardversion/${version}/getnewerifexists`, callback );
 	};
 
-	let getBoardHistorySince = function( boardId, version, callback ) {
+	const getBoardHistorySince = ( boardId, version, callback ) => {
 		return clientGet( `board/${boardId}/boardversion/${version}/getboardhistorysince`, callback );
 	};
 
-	let getBoardUpdates = function( boardId, version, callback ) {
+	const getBoardUpdates = ( boardId, version, callback ) => {
 		return clientGet( `board/${boardId}/boardversion/${version}/checkforupdates`, callback );
 	};
 
-	let getCard = function( boardId, cardId, callback ) {
+	const getCard = ( boardId, cardId, callback ) => {
 		return clientGet( `board/${boardId}/getcard/${cardId}`, callback );
 	};
 
-	let getCardByExternalId = function( boardId, externalCardId, callback ) {
+	const getCardByExternalId = ( boardId, externalCardId, callback ) => {
 		return clientGet( `board/${boardId}/getcardbyexternalid/${encodeURIComponent( externalCardId )}`, callback );
 	};
 
-	let addCard = function( boardId, laneId, position, card, callback ) {
+	const addCard = ( boardId, laneId, position, card, callback ) => {
 		return addCardWithWipOverride( boardId, laneId, position, defaultWipOverrideReason, card, callback );
 	};
 
-	let addCardWithWipOverride = function( boardId, laneId, position, wipOverrideReason, card, callback ) {
+	const addCardWithWipOverride = ( boardId, laneId, position, wipOverrideReason, card, callback ) => {
 		card.UserWipOverrideComment = wipOverrideReason;
 		return clientPost( `board/${boardId}/AddCardWithWipOverride/Lane/${laneId}/Position/${position}`, card, callback );
 	};
 
-	let addCards = function( boardId, cards, callback ) {
-		return this.addCardsWithWipOverride( boardId, cards, defaultWipOverrideReason, callback );
+	const addCards = ( boardId, cards, callback ) => {
+		return addCardsWithWipOverride( boardId, cards, defaultWipOverrideReason, callback );
 	};
 
-	let addCardsWithWipOverride = function( boardId, cards, wipOverrideReason, callback ) {
+	const addCardsWithWipOverride = ( boardId, cards, wipOverrideReason, callback ) => {
 		return clientPost( `board/${boardId}/AddCards?wipOverrideComment=${encodeURIComponent( wipOverrideReason )}`, cards, callback );
 	};
 
-	let moveCard = function( boardId, cardId, toLaneId, position, wipOverrideReason, callback ) {
+	const moveCard = ( boardId, cardId, toLaneId, position, wipOverrideReason, callback ) => {
 		return clientPost( `board/${boardId}/movecardwithwipoverride/${cardId}/lane/${toLaneId}/position/${position}`, {
 			comment: wipOverrideReason
 		}, callback );
 	};
 
-	let moveCardByExternalId = function( boardId, externalCardId, toLaneId, position, wipOverrideReason, callback ) {
+	const moveCardByExternalId = ( boardId, externalCardId, toLaneId, position, wipOverrideReason, callback ) => {
 		return clientPost( `board/${boardId}/movecardbyexternalid/${encodeURIComponent( externalCardId )}/lane/${toLaneId}/position/${position}`, {
 			comment: wipOverrideReason
 		}, callback );
 	};
 
-	let moveCardToBoard = function( cardId, destinationBoardId, callback ) {
+	const moveCardToBoard = ( cardId, destinationBoardId, callback ) => {
 		return clientPost( `card/movecardtoanotherboard/${cardId}/${destinationBoardId}`, null, callback );
 	};
 
-	let updateCard = function( boardId, card, callback ) {
+	const updateCard = ( boardId, card, callback ) => {
 		card.UserWipOverrideComment = defaultWipOverrideReason;
 		return clientPost( `board/${boardId}/UpdateCardWithWipOverride`, card, callback );
 	};
 
-	let updateCardFields = function( updateFields, callback ) {
+	const updateCardFields = ( updateFields, callback ) => {
 		return clientPost( "card/update", updateFields, callback );
 	};
 
-	let updateCards = function( boardId, cards, callback ) {
+	const updateCards = ( boardId, cards, callback ) => {
 		return clientPost( `board/${boardId}/updatecards?wipoverridecomment=${encodeURIComponent( defaultWipOverrideReason )}`, cards, callback );
 	};
 
-	let getComments = function( boardId, cardId, callback ) {
+	const getComments = ( boardId, cardId, callback ) => {
 		return clientGet( `card/getcomments/${boardId}/${cardId}`, callback );
 	};
 
-	let addComment = function( boardId, cardId, userId, comment, callback ) {
+	const addComment = ( boardId, cardId, userId, comment, callback ) => {
 		let data;
 		data = {
 			PostedById: userId,
@@ -395,7 +399,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 		return clientPost( `card/savecomment/${boardId}/${cardId}`, data, callback );
 	};
 
-	let addCommentByExternalId = function( boardId, externalCardId, userId, comment, callback ) {
+	const addCommentByExternalId = ( boardId, externalCardId, userId, comment, callback ) => {
 		let data;
 		data = {
 			PostedById: userId,
@@ -404,73 +408,73 @@ const LeanKitClient = ( account, email, password, options ) => {
 		return clientPost( `card/savecommentbyexternalid/${boardId}/${encodeURIComponent( externalCardId )}`, data, callback );
 	};
 
-	let getCardHistory = function( boardId, cardId, callback ) {
+	const getCardHistory = ( boardId, cardId, callback ) => {
 		return clientGet( `card/history/${boardId}/${cardId}`, callback );
 	};
 
-	let searchCards = function( boardId, options, callback ) {
+	const searchCards = ( boardId, options, callback ) => {
 		return clientPost( `board/${boardId}/searchcards`, options, callback );
 	};
 
-	let getNewCards = function( boardId, callback ) {
+	const getNewCards = ( boardId, callback ) => {
 		return clientGet( `board/${boardId}/listnewcards`, callback );
 	};
 
-	let deleteCard = function( boardId, cardId, callback ) {
+	const deleteCard = ( boardId, cardId, callback ) => {
 		return clientPost( `board/${boardId}/deletecard/${cardId}`, null, callback );
 	};
 
-	let deleteCards = function( boardId, cardIds, callback ) {
+	const deleteCards = ( boardId, cardIds, callback ) => {
 		return clientPost( `board/${boardId}/deletecards`, cardIds, callback );
 	};
 
-	let getTaskboard = function( boardId, cardId, callback ) {
+	const getTaskboard = ( boardId, cardId, callback ) => {
 		return clientGet( `v1/board/${boardId}/card/${cardId}/taskboard`, callback );
 	};
 
-	let addTask = function( boardId, cardId, taskCard, callback ) {
+	const addTask = ( boardId, cardId, taskCard, callback ) => {
 		taskCard.UserWipOverrideComment = defaultWipOverrideReason;
 		return clientPost( `v1/board/${boardId}/card/${cardId}/tasks/lane/${taskCard.LaneId}/position/${taskCard.Index}`, taskCard, callback );
 	};
 
-	let updateTask = function( boardId, cardId, taskCard, callback ) {
+	const updateTask = ( boardId, cardId, taskCard, callback ) => {
 		taskCard.UserWipOverrideComment = defaultWipOverrideReason;
 		return clientPost( `v1/board/${boardId}/update/card/${cardId}/tasks/${taskCard.Id}`, taskCard, callback );
 	};
 
-	let deleteTask = function( boardId, cardId, taskId, callback ) {
+	const deleteTask = ( boardId, cardId, taskId, callback ) => {
 		return clientPost( `v1/board/${boardId}/delete/card/${cardId}/tasks/${taskId}`, null, callback );
 	};
 
-	let getTaskBoardUpdates = function( boardId, cardId, version, callback ) {
+	const getTaskBoardUpdates = ( boardId, cardId, version, callback ) => {
 		return clientGet( `v1/board/${boardId}/card/${cardId}/tasks/boardversion/${version}`, callback );
 	};
 
-	let moveTask = function( boardId, cardId, taskId, toLaneId, position, callback ) {
+	const moveTask = ( boardId, cardId, taskId, toLaneId, position, callback ) => {
 		return clientPost( `v1/board/${boardId}/move/card/${cardId}/tasks/${taskId}/lane/${toLaneId}/position/${position}`, null, callback );
 	};
 
-	let getAttachmentCount = function( boardId, cardId, callback ) {
+	const getAttachmentCount = ( boardId, cardId, callback ) => {
 		return clientGet( `card/GetAttachmentsCount/${boardId}/${cardId}`, callback );
 	};
 
-	let getAttachments = function( boardId, cardId, callback ) {
+	const getAttachments = ( boardId, cardId, callback ) => {
 		return clientGet( `card/GetAttachments/${boardId}/${cardId}`, callback );
 	};
 
-	let getAttachment = function( boardId, cardId, attachmentId, callback ) {
+	const getAttachment = ( boardId, cardId, attachmentId, callback ) => {
 		return clientGet( `card/GetAttachments/${boardId}/${cardId}/${attachmentId}`, callback );
 	};
 
-	let downloadAttachment = function( boardId, attachmentId, filePath, callback ) {
-		return clientSaveFile( `card/DownloadAttachment/${boardId}/${attachmentId}`, filePath, callback );
+	const downloadAttachment = ( boardId, attachmentId, file, callback ) => {
+		return clientSaveFile( `card/DownloadAttachment/${boardId}/${attachmentId}`, file, callback );
 	};
 
-	let deleteAttachment = function( boardId, cardId, attachmentId, callback ) {
+	const deleteAttachment = ( boardId, cardId, attachmentId, callback ) => {
 		return clientPost( `card/DeleteAttachment/${boardId}/${cardId}/${attachmentId}`, null, callback );
 	};
 
-	let addAttachment = function( boardId, cardId, description, file, callback ) {
+	const addAttachment = ( boardId, cardId, description, file, callback ) => {
 		let attachmentData, fileName;
 		if ( typeof file === "string" ) {
 			fileName = path.basename( file );

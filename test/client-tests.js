@@ -7,7 +7,6 @@ let when = require( "when" );
 const TEST_TIMEOUT = 20000;
 let fs = require( "fs" );
 let _ = require( "lodash" );
-// let should = require( "should" );
 import LeanKitClient from "../src/client";
 let nock = require( "nock" );
 let accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
@@ -971,13 +970,29 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
+		it( "should download attachment to stream without error", ( done ) => {
+			should.exist( attachment );
+			attachment.should.have.property( "Id" );
+			let fileName = "./test/download.txt";
+			let file = fs.createWriteStream( fileName );
+			client.downloadAttachment( board.Id, attachment.Id, file, ( err, res ) => {
+				should.not.exist( err );
+				should.exist( res );
+				fs.readFile( fileName, "utf8", ( err, text ) => {
+					should.not.exist( err );
+					should.exist( text );
+					text.should.equal( "test file" );
+					done();
+				} );
+			} );
+		} );
+
 		it( "should delete attachment without error", ( done ) => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
 			client.deleteAttachment( board.Id, testCard.Id, attachment.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
-				// console.log(res);
 				res.should.have.property( "ReplyCode" );
 				res.ReplyCode.should.equal( 203 );
 				done();
@@ -1069,6 +1084,22 @@ describe( "LeanKitClient", function() {
 			attachment.should.have.property( "Id" );
 			let fileName = "./test/download.txt";
 			return client.downloadAttachment( board.Id, attachment.Id, fileName ).then( ( res ) => {
+				should.exist( res );
+				fs.readFile( fileName, "utf8", ( err, text ) => {
+					should.not.exist( err );
+					should.exist( text );
+					text.should.equal( "test file" );
+					done();
+				} );
+			} );
+		} );
+
+		it( "should download attachment to stream without error", ( done ) => {
+			should.exist( attachment );
+			attachment.should.have.property( "Id" );
+			let fileName = "./test/download.txt";
+			let file = fs.createWriteStream( fileName );
+			return client.downloadAttachment( board.Id, attachment.Id, file ).then( ( res ) => {
 				should.exist( res );
 				fs.readFile( fileName, "utf8", ( err, text ) => {
 					should.not.exist( err );
