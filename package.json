@@ -15,7 +15,7 @@
     }
   ],
   "license": "SEE LICENSE IN https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",

@@ -566,6 +566,28 @@ describe( "LeanKitClient", function() {
 				} );
 			} );
 		} );
+
+		it( "should not add a card with an incorrect lane ID", ( done ) => {
+			should.exist( board );
+			should.exist( boardIdentifiers );
+
+			let card = _.clone( cardTemplate );
+
+			card.TypeId = 123; // bogus type ID
+			let now = new Date();
+			card.Title = "Mocha test card " + now.getTime();
+			card.ExternalCardID = now.getTime();
+
+			client.addCard( board.Id, 123, 0, card, ( err, res ) => {
+				should.exist( err );
+				should.not.exist( res );
+				err.should.have.property( "replyCode" ).that.is.equal( 503 );
+				err.should.have.property( "name" ).that.is.equal( "apiError" );
+				err.should.have.property( "replyText" ).to.include( "The Lane specified" );
+				err.should.have.property( "replyData" );
+				done();
+			} );
+		} );
 	} );
 
 	describe( "Card Promise API", function() {
@@ -585,6 +607,30 @@ describe( "LeanKitClient", function() {
 			if ( testCardId > 0 ) {
 				return removeTestCard( board.Id, testCardId );
 			}
+		} );
+
+		it( "should not add a card with an incorrect lane ID", ( done ) => {
+			should.exist( board );
+			should.exist( boardIdentifiers );
+
+			let card = _.clone( cardTemplate );
+
+			card.TypeId = 123; // bogus type ID
+			let now = new Date();
+			card.Title = "Mocha test card " + now.getTime();
+			card.ExternalCardID = now.getTime();
+
+			client.addCard( board.Id, 123, 0, card ).then( ( res ) => {
+				should.not.exist( res );
+				done();
+			} ).catch( err => {
+				should.exist( err );
+				err.should.have.property( "replyCode" ).that.is.equal( 503 );
+				err.should.have.property( "name" ).that.is.equal( "apiError" );
+				err.should.have.property( "replyText" ).to.include( "The Lane specified" );
+				err.should.have.property( "replyData" );
+				done();
+			} );
 		} );
 
 		it( "should add a card to the first active lane without error", function( done ) {
