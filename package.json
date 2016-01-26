@@ -15,7 +15,7 @@
     }
   ],
   "license": "SEE LICENSE IN https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
@@ -35,6 +35,7 @@
   "main": "./client.js",
   "dependencies": {
     "change-case": "^2.3.0",
+    "fs-jetpack": "^0.7.1",
     "request": "^2.67.0",
     "when": "~3.7.4"
   },
@@ -44,7 +45,6 @@
     "babel-preset-es2015": "^6.3.13",
     "chai": "^3.4.1",
     "chai-as-promised": "^5.1.0",
-    "fs-jetpack": "^0.7.0",
     "lodash": "~2.4.0",
     "mocha": "^2.3.3",
     "nock": "^3.1.0",
