@@ -538,3 +538,4 @@ const LeanKitClient = ( account, email, password, options ) => {
 };
 
 export default LeanKitClient;
+module.exports = LeanKitClient;

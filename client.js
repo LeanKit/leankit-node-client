@@ -545,3 +545,5 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 };
 
 exports.default = LeanKitClient;
+
+module.exports = LeanKitClient;
