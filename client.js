@@ -31,7 +31,8 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		if (url.indexOf("/", account.length - 1) !== 0) {
 			url += "/";
 		}
-		return url + "kanban/api/";
+		return url;
+		// return url + "kanban/api/";
 	};
 
 	var boardIdentifiers = {};
@@ -126,8 +127,13 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		return { err: err, body: parsed };
 	};
 
+	var checkPath = function checkPath(path) {
+		return path.startsWith("api/") ? path : "kanban/api/" + path;
+	};
+
 	var clientGet = function clientGet(path, callback) {
 		var p = when.promise(function (resolve, reject) {
+			path = checkPath(path);
 			client.get(path, function (err, res, body) {
 				if (err) {
 					if (err instanceof Error) {
@@ -162,6 +168,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var clientPost = function clientPost(path, data, callback) {
 		var p = when.promise(function (resolve, reject) {
+			path = checkPath(path);
 			client.post(path, { body: data }, function (err, res, body) {
 				if (err) {
 					reject(err);
@@ -190,6 +197,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 	var clientSaveFile = function clientSaveFile(path, file, callback) {
 		var p = when.promise(function (resolve, reject) {
 			var f = typeof file === "string" ? fs.createWriteStream(file) : file;
+			path = checkPath(path);
 			var res = client.get(path);
 			res.pipe(f);
 			res.on("end", function () {
@@ -220,6 +228,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var clientSendFile = function clientSendFile(path, file, attachmentData, callback) {
 		var p = when.promise(function (resolve, reject) {
+			path = checkPath(path);
 			sendFile(path, file, attachmentData, function (err, res, body) {
 				if (err) {
 					reject(err);
@@ -496,6 +505,12 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		return clientSendFile("card/SaveAttachment/" + boardId + "/" + cardId, file, attachmentData, callback);
 	};
 
+	var getCurrentUserProfile = function getCurrentUserProfile() {
+		var boardId = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+
+		return clientGet("api/user/getcurrentusersettings/" + boardId);
+	};
+
 	return {
 		addAttachment: addAttachment,
 		addCard: addCard,
@@ -526,6 +541,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 		getCardByExternalId: getCardByExternalId,
 		getCardHistory: getCardHistory,
 		getComments: getComments,
+		getCurrentUserProfile: getCurrentUserProfile,
 		getNewBoards: getNewBoards,
 		getNewCards: getNewCards,
 		getNewerIfExists: getNewerIfExists,

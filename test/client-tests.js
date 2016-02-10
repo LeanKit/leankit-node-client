@@ -1605,17 +1605,32 @@ describe( "LeanKitClient", function() {
 
 		it( "builds the correct url from a given account name", () => {
 			let client = new LeanKitClient( "account", "me@mycompany.com", "test" );
-			client._options.baseUrl.should.equal( "https://account.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://account.leankit.com/" );
 		} );
 
 		it( "builds the correct url from a given account domain name", () => {
 			let client = new LeanKitClient( "accountname.leankit.com", "me@mycompany.com", "test" );
-			client._options.baseUrl.should.equal( "https://accountname.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://accountname.leankit.com/" );
 		} );
 
 		it( "builds the correct url from a given url", () => {
 			let client = new LeanKitClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
-			client._options.baseUrl.should.equal( "https://mycompany.leankit.com/kanban/api/" );
+			client._options.baseUrl.should.equal( "https://mycompany.leankit.com/" );
+		} );
+	} );
+
+	describe( "User Profile", () => {
+		it( "retrieves the current user's profile", ()=> {
+			return client.getCurrentUserProfile()
+				.then( ( user ) => {
+					should.exist( user );
+					user.should.have.property( "Id" );
+					user.should.have.property( "FirstName" );
+					user.should.have.property( "LastName" );
+					user.should.have.property( "EmailAddress" );
+					user.should.have.property( "DateFormat" );
+					user.should.have.property( "TimeZone" );
+				} );
 		} );
 	} );
 } );

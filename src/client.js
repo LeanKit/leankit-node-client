@@ -25,7 +25,8 @@ const LeanKitClient = ( account, email, password, options ) => {
 		if ( url.indexOf( "/", account.length - 1 ) !== 0 ) {
 			url += "/";
 		}
-		return url + "kanban/api/";
+		return url;
+		// return url + "kanban/api/";
 	};
 
 	let boardIdentifiers = {};
@@ -119,8 +120,13 @@ const LeanKitClient = ( account, email, password, options ) => {
 		return { err: err, body: parsed };
 	};
 
+	const checkPath = ( path ) => {
+		return ( path.startsWith( "api/" ) ) ? path : "kanban/api/" + path;
+	};
+
 	const clientGet = ( path, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
+			path = checkPath( path );
 			client.get( path, ( err, res, body ) => {
 				if ( err ) {
 					if ( err instanceof Error ) {
@@ -155,6 +161,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 
 	const clientPost = ( path, data, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
+			path = checkPath( path );
 			client.post( path, { body: data }, ( err, res, body ) => {
 				if ( err ) {
 					reject( err );
@@ -184,6 +191,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 	const clientSaveFile = ( path, file, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
 			let f = ( typeof file === "string" ) ? fs.createWriteStream( file ) : file;
+			path = checkPath( path );
 			let res = client.get( path );
 			res.pipe( f );
 			res.on( "end", () => {
@@ -214,6 +222,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 
 	const clientSendFile = ( path, file, attachmentData, callback ) => {
 		let p = when.promise( ( resolve, reject ) => {
+			path = checkPath( path );
 			sendFile( path, file, attachmentData, ( err, res, body ) => {
 				if ( err ) {
 					reject( err );
@@ -489,6 +498,10 @@ const LeanKitClient = ( account, email, password, options ) => {
 		return clientSendFile( `card/SaveAttachment/${boardId}/${cardId}`, file, attachmentData, callback );
 	};
 
+	const getCurrentUserProfile = ( boardId = 0 ) => {
+		return clientGet( `api/user/getcurrentusersettings/${boardId}` );
+	};
+
 	return {
 		addAttachment: addAttachment,
 		addCard: addCard,
@@ -519,6 +532,7 @@ const LeanKitClient = ( account, email, password, options ) => {
 		getCardByExternalId: getCardByExternalId,
 		getCardHistory: getCardHistory,
 		getComments: getComments,
+		getCurrentUserProfile: getCurrentUserProfile,
 		getNewBoards: getNewBoards,
 		getNewCards: getNewCards,
 		getNewerIfExists: getNewerIfExists,

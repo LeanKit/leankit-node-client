@@ -1,7 +1,6 @@
 {
   "name": "leankit-client",
   "description": "Node.js API client for use with LeanKit",
-  "readme": "https://github.com/LeanKit/leankit-node-client/blob/master/README.md",
   "keywords": [
     "leankit",
     "api",
@@ -15,7 +14,7 @@
     }
   ],
   "license": "SEE LICENSE IN https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
