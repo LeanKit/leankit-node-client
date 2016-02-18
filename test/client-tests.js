@@ -1546,6 +1546,9 @@ describe( "LeanKitClient", function() {
 					} ],
 					ReplyCode: 503,
 				ReplyText: "Some useful message here." } );
+			nock( url )
+				.get( "/api/user/getcurrentusersettings/0" )
+				.reply( 401, "<html><head><title>401 Authorization Required</title></head><body><h1>Authorization Required</h1><p>This server could not verify that you are authorized to access the document requested.  Either you supplied the wrong credentials (e.g., bad password), or your browser doesn't understand how to supply the credentials required.</p></body></html>" );
 		} );
 		afterEach( () => {
 			nock.cleanAll();
@@ -1581,25 +1584,47 @@ describe( "LeanKitClient", function() {
 					err.should.have.property( "replyCode" ).that.is.equal( 503 );
 				} );
 		} );
+
+		it( "should handle bad login", () => {
+			let badClient = null;
+			if ( !proxy ) {
+				badClient = new LeanKitClient( accountName, email, "totallyboguspassword" );
+			} else {
+				process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+				badClient = new LeanKitClient( accountName, email, "totallyboguspassword", {
+					proxy: proxy
+				} );
+			}
+			return badClient.getCurrentUserProfile()
+				.then( ( res ) => {
+					"this".should.not.equal( "this" );
+					should.not.exist( res );
+				} )
+				.catch( ( err ) => {
+					should.exist( err );
+					err.should.have.property( "replyCode" ).that.is.equal( 401 );
+				} );
+		} );
 	} );
 
 	describe( "Client", () => {
-		it( "should let you bypass user/pass in favor of headers", ( done ) => {
-			let credentials = new Buffer( email + ":" + pwd ).toString( "base64" );
+		it( "should let you bypass user/pass in favor of headers", () => {
+			let cred = `${email}:${pwd}`;
+			let basicAuth = new Buffer( cred ).toString( "base64" );
 			let opts = {
 				headers: {
-					authorization: "Basic " + credentials
+					authorization: `Basic ${basicAuth}`
 				}
 			};
 
 			let client = new LeanKitClient( accountName, opts );
 
-			client.getBoards( ( err, res ) => {
-				should.not.exist( err );
+			return client.getBoards().then( ( res ) => {
 				should.exist( res );
 				boards = res;
 				boards.length.should.be.above( 0 );
-				done();
+			} ).catch( ( err ) => {
+				should.not.exist( err );
 			} );
 		} );
 

@@ -1,6 +1,5 @@
 "use strict";
 
-var _arguments = arguments;
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
@@ -10,12 +9,11 @@ var when = require("when");
 var fs = require("fs");
 var jetpack = require("fs-jetpack");
 
-var LeanKitClient = function LeanKitClient(account, email, password, options) {
-	if (_arguments.length === 2) {
-		options = _arguments[1];
-		email = null;
-		password = null;
-	}
+var LeanKitClient = function LeanKitClient() {
+	var account = arguments[0];
+	var email = arguments.length > 2 ? arguments[1] : null;
+	var password = arguments.length > 2 ? arguments[2] : null;
+	var options = arguments.length === 4 ? arguments[3] : arguments.length === 2 ? arguments[1] : {};
 
 	var buildUrl = function buildUrl(account) {
 		var url = "";
@@ -82,32 +80,37 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 
 	var client = request.defaults(options);
 
-	var parseReplyData = function parseReplyData(error, response, callback, cacheCallback) {
+	var parseReplyData = function parseReplyData(error, response, body, callback, cacheCallback) {
 		if (error) {
 			if (error instanceof Error) {
-				return callback(error, response);
+				return callback(error, body);
 			} else {
 				var err = new Error(error.toString());
 				err.name = "clientRequestError";
-				return callback(err, response);
+				return callback(err, body);
 			}
-		} else if (response && response.ReplyCode && response.ReplyCode > 399) {
-			var err = new Error(response.ReplyText || "apiError");
+		} else if (response.statusCode !== 200) {
+			var err = new Error(body);
+			err.name = "clientRequestError";
+			err.replyCode = response.statusCode;
+			return callback(err, body);
+		} else if (body && body.ReplyCode && body.ReplyCode > 399) {
+			var err = new Error(body.ReplyText || "apiError");
 			err.name = "apiError";
-			err.httpStatusCode = response.ReplyCode;
-			err.replyCode = response.ReplyCode;
-			err.replyText = response.ReplyText;
-			err.replyData = response.ReplyData;
+			err.httpStatusCode = body.ReplyCode;
+			err.replyCode = body.ReplyCode;
+			err.replyText = body.ReplyText;
+			err.replyData = body.ReplyData;
 			return callback(err);
-		} else if (response && response.ReplyCode !== 200 && response.ReplyCode !== 201) {
-			return callback(null, response);
-		} else if (response.ReplyData && response.ReplyData.length > 0) {
+		} else if (body && body.ReplyCode && body.ReplyCode !== 200 && body.ReplyCode !== 201) {
+			return callback(null, body);
+		} else if (body.ReplyData && body.ReplyData.length > 0) {
 			if (typeof cacheCallback === "function") {
-				cacheCallback(response.ReplyData[0]);
+				cacheCallback(body.ReplyData[0]);
 			}
-			return callback(null, response.ReplyData[0]);
+			return callback(null, body.ReplyData[0]);
 		} else {
-			return callback(null, response);
+			return callback(null, body);
 		}
 	};
 
@@ -144,7 +147,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 						reject(error);
 					}
 				} else {
-					parseReplyData(err, body, function (parseErr, parsed) {
+					parseReplyData(err, res, body, function (parseErr, parsed) {
 						if (!parseErr) {
 							resolve(parsed);
 						} else {
@@ -173,7 +176,7 @@ var LeanKitClient = function LeanKitClient(account, email, password, options) {
 				if (err) {
 					reject(err);
 				} else {
-					parseReplyData(err, body, function (parseErr, parsed) {
+					parseReplyData(err, res, body, function (parseErr, parsed) {
 						if (!parseErr) {
 							resolve(parsed);
 						} else {
