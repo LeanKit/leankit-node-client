@@ -10,10 +10,10 @@ var fs = require("fs");
 var jetpack = require("fs-jetpack");
 
 var LeanKitClient = function LeanKitClient() {
-	var account = arguments[0];
-	var email = arguments.length > 2 ? arguments[1] : null;
-	var password = arguments.length > 2 ? arguments[2] : null;
-	var options = arguments.length === 4 ? arguments[3] : arguments.length === 2 ? arguments[1] : {};
+	var account = arguments.length <= 0 ? undefined : arguments[0];
+	var email = arguments.length > 2 ? arguments.length <= 1 ? undefined : arguments[1] : null;
+	var password = arguments.length > 2 ? arguments.length <= 2 ? undefined : arguments[2] : null;
+	var options = arguments.length === 4 ? arguments.length <= 3 ? undefined : arguments[3] : arguments.length === 2 ? arguments.length <= 1 ? undefined : arguments[1] : {};
 
 	var buildUrl = function buildUrl(account) {
 		var url = "";
@@ -52,7 +52,7 @@ var LeanKitClient = function LeanKitClient() {
 	}
 
 	if (!options.headers["User-Agent"]) {
-		var version = undefined;
+		var version = void 0;
 		if (jetpack.exists(__dirname + "/package.json")) {
 			var pkg = jetpack.read(__dirname + "/package.json", "json");
 			version = pkg.version;
@@ -90,18 +90,18 @@ var LeanKitClient = function LeanKitClient() {
 				return callback(err, body);
 			}
 		} else if (response.statusCode !== 200) {
-			var err = new Error(body);
-			err.name = "clientRequestError";
-			err.replyCode = response.statusCode;
-			return callback(err, body);
+			var _err = new Error(body);
+			_err.name = "clientRequestError";
+			_err.replyCode = response.statusCode;
+			return callback(_err, body);
 		} else if (body && body.ReplyCode && body.ReplyCode > 399) {
-			var err = new Error(body.ReplyText || "apiError");
-			err.name = "apiError";
-			err.httpStatusCode = body.ReplyCode;
-			err.replyCode = body.ReplyCode;
-			err.replyText = body.ReplyText;
-			err.replyData = body.ReplyData;
-			return callback(err);
+			var _err2 = new Error(body.ReplyText || "apiError");
+			_err2.name = "apiError";
+			_err2.httpStatusCode = body.ReplyCode;
+			_err2.replyCode = body.ReplyCode;
+			_err2.replyText = body.ReplyText;
+			_err2.replyData = body.ReplyData;
+			return callback(_err2);
 		} else if (body && body.ReplyCode && body.ReplyCode !== 200 && body.ReplyCode !== 201) {
 			return callback(null, body);
 		} else if (body.ReplyData && body.ReplyData.length > 0) {
@@ -115,8 +115,8 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var parseBody = function parseBody(body) {
-		var err = undefined,
-		    parsed = undefined;
+		var err = void 0,
+		    parsed = void 0;
 		if (typeof body === "string" && body !== "") {
 			try {
 				parsed = JSON.parse(body);
@@ -409,7 +409,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addComment = function addComment(boardId, cardId, userId, comment, callback) {
-		var data = undefined;
+		var data = void 0;
 		data = {
 			PostedById: userId,
 			Text: comment
@@ -418,7 +418,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addCommentByExternalId = function addCommentByExternalId(boardId, externalCardId, userId, comment, callback) {
-		var data = undefined;
+		var data = void 0;
 		data = {
 			PostedById: userId,
 			Text: comment
@@ -493,8 +493,8 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addAttachment = function addAttachment(boardId, cardId, description, file, callback) {
-		var attachmentData = undefined,
-		    fileName = undefined;
+		var attachmentData = void 0,
+		    fileName = void 0;
 		if (typeof file === "string") {
 			fileName = path.basename(file);
 		} else {
@@ -566,3 +566,4 @@ var LeanKitClient = function LeanKitClient() {
 exports.default = LeanKitClient;
 
 module.exports = LeanKitClient;
+module.exports = exports["default"];
