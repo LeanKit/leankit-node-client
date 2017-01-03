@@ -23,7 +23,7 @@ var changeCase = require("change-case");
 var LeanKitNotifier = function (_EventEmitter) {
 	_inherits(LeanKitNotifier, _EventEmitter);
 
-	function LeanKitNotifier(client, boardId, version, pollInterval) {
+	function LeanKitNotifier(client, boardId, version, pollInterval, resumeAfterError) {
 		_classCallCheck(this, LeanKitNotifier);
 
 		var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LeanKitNotifier).call(this));
@@ -33,6 +33,7 @@ var LeanKitNotifier = function (_EventEmitter) {
 		_this.boardId = boardId;
 		_this.version = version || 0;
 		_this.pollInterval = pollInterval || 30;
+		_this.resumeAfterError = resumeAfterError === false ? false : resumeAfterError || true;
 		// super.call( this );
 		return _this;
 	}
@@ -81,6 +82,8 @@ var LeanKitNotifier = function (_EventEmitter) {
 						_get(Object.getPrototypeOf(LeanKitNotifier.prototype), "emit", _this3).call(_this3, "error", err);
 						if (typeof callback === "function") {
 							callback(err);
+						} else if (_this3.resumeAfterError) {
+							_this3.timer = _this3.waitForNextPoll();
 						}
 					} else if (res.HasUpdates) {
 						(function () {

@@ -74,8 +74,9 @@ describe( "Events Tests", () => {
 	describe( "client constructor", () => {
 		const testVersion = 33;
 		const testPollInterval = 55;
+		const resumeAfterError = false;
 		before( () => {
-			events = new LeanKitEvents( client, boardId, testVersion, testPollInterval );
+			events = new LeanKitEvents( client, boardId, testVersion, testPollInterval, resumeAfterError );
 		} );
 
 		it( "has the right board version", () => {
@@ -84,6 +85,31 @@ describe( "Events Tests", () => {
 
 		it( "has the right polling interval", () => {
 			events.pollInterval.should.equal( testPollInterval );
+		} );
+
+		it( "resumeAfterError = false", () => {
+			events.resumeAfterError.should.equal( false );
+		} );
+	} );
+
+	describe( "more client constructor", () => {
+		const testVersion = 33;
+		const testPollInterval = 55;
+		const resumeAfterError = true;
+		before( () => {
+			events = new LeanKitEvents( client, boardId, testVersion, testPollInterval, resumeAfterError );
+		} );
+
+		it( "has the right board version", () => {
+			events.version.should.equal( testVersion );
+		} );
+
+		it( "has the right polling interval", () => {
+			events.pollInterval.should.equal( testPollInterval );
+		} );
+
+		it( "resumeAfterError = true", () => {
+			events.resumeAfterError.should.equal( true );
 		} );
 	} );
 
@@ -114,6 +140,10 @@ describe( "Events Tests", () => {
 
 		it( "defaults to 30 seconds polling", () => {
 			events.pollInterval.should.equal( 30 );
+		} );
+
+		it( "defaults to resumeAfterError = true", () => {
+			events.resumeAfterError.should.equal( true );
 		} );
 	} );
 

@@ -62,6 +62,7 @@ events.start();
 |`boardId`|The ID of the LeanKit Board to subscribe to.|
 |`version`|Optional Board version number. If events have occurred since the given `version`, those will be returned immediately.|
 |`pollInterval`|Optional polling interval in seconds. The default is 30 seconds.|
+|`resumeAfterError`|Optional handling of errors. If an error occurs with `resumeAfterError = false` the client will stop polling for changes. The default is `true`.|
 
 **Sample**
 

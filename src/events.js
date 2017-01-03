@@ -3,13 +3,14 @@ const when = require( "when" );
 const changeCase = require( "change-case" );
 
 export default class LeanKitNotifier extends EventEmitter {
-	constructor( client, boardId, version, pollInterval ) {
+	constructor( client, boardId, version, pollInterval, resumeAfterError ) {
 		super();
 		this.timer = 0;
 		this.client = client;
 		this.boardId = boardId;
 		this.version = version || 0;
 		this.pollInterval = pollInterval || 30;
+		this.resumeAfterError = ( resumeAfterError === false ) ? false : ( resumeAfterError || true );
 		// super.call( this );
 	}
 
@@ -49,6 +50,8 @@ export default class LeanKitNotifier extends EventEmitter {
 					super.emit( "error", err );
 					if ( typeof callback === "function" ) {
 						callback( err );
+					} else if ( this.resumeAfterError ) {
+						this.timer = this.waitForNextPoll();
 					}
 				} else if ( res.HasUpdates ) {
 					this.version = res.CurrentBoardVersion;
