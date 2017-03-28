@@ -47,7 +47,7 @@ The LeanKit Client includes a module for monitoring a board for events, such as 
 
 ```
 var LeanKitEvents = require( "leankit-client/events" );
-var events = new LeanKitEvents( client, boardId [, version] [, pollInterval] );
+var events = new LeanKitEvents( client, boardId [, version] [, pollInterval], [resumeAfterError] );
 events.on( "event-name", function( e ) {
 	// Do something with the event
 } );

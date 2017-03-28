@@ -3,39 +3,107 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+/* eslint-disable max-lines */
 var path = require("path");
 var request = require("request");
 var when = require("when");
 var fs = require("fs");
 var jetpack = require("fs-jetpack");
+var STATUS_200 = 200;
+var STATUS_201 = 201;
+
+var buildUrl = function buildUrl(acct) {
+	var url = "";
+	if (acct.indexOf("http://") !== 0 && acct.indexOf("https://") !== 0) {
+		url = "https://" + acct;
+		// Assume leankit.com if no domain is specified
+		if (acct.indexOf(".") === -1) {
+			url += ".leankit.com";
+		}
+	} else {
+		url = acct;
+	}
+	if (url.indexOf("/", acct.length - 1) !== 0) {
+		url += "/";
+	}
+	return url;
+	// return url + "kanban/api/";
+};
+
+var parseReplyData = function parseReplyData(error, response, body, callback, cacheCallback) {
+	if (error) {
+		if (error instanceof Error) {
+			return callback(error, body);
+		}
+		var err = new Error(error.toString());
+		err.name = "clientRequestError";
+		return callback(err, body);
+	} else if (response.statusCode !== STATUS_200) {
+		var _err = new Error(body);
+		_err.name = "clientRequestError";
+		_err.replyCode = response.statusCode;
+		return callback(_err, body);
+	} else if (body && body.ReplyCode && body.ReplyCode > 399) {
+		// eslint-disable-line no-magic-numbers
+		var _err2 = new Error(body.ReplyText || "apiError");
+		_err2.name = "apiError";
+		_err2.httpStatusCode = body.ReplyCode;
+		_err2.replyCode = body.ReplyCode;
+		_err2.replyText = body.ReplyText;
+		_err2.replyData = body.ReplyData;
+		return callback(_err2);
+	} else if (body && body.ReplyCode && body.ReplyCode !== STATUS_200 && body.ReplyCode !== STATUS_201) {
+		return callback(null, body);
+	} else if (body.ReplyData && body.ReplyData.length > 0) {
+		if (typeof cacheCallback === "function") {
+			cacheCallback(body.ReplyData[0]);
+		}
+		return callback(null, body.ReplyData[0]);
+	}
+	return callback(null, body);
+};
+
+var parseBody = function parseBody(body) {
+	var err = void 0,
+	    parsed = void 0;
+	if (typeof body === "string" && body !== "") {
+		try {
+			parsed = JSON.parse(body);
+		} catch (_error) {
+			err = _error;
+			parsed = body;
+		}
+	} else {
+		parsed = body;
+	}
+	return { err: err, body: parsed };
+};
+
+var checkPath = function checkPath(urlPath) {
+	return urlPath.startsWith("api/") ? urlPath : "kanban/api/" + urlPath;
+};
 
 var LeanKitClient = function LeanKitClient() {
+	// eslint-disable-line max-statements
 	var account = arguments.length <= 0 ? undefined : arguments[0];
-	var email = arguments.length > 2 ? arguments.length <= 1 ? undefined : arguments[1] : null;
-	var password = arguments.length > 2 ? arguments.length <= 2 ? undefined : arguments[2] : null;
-	var options = arguments.length === 4 ? arguments.length <= 3 ? undefined : arguments[3] : arguments.length === 2 ? arguments.length <= 1 ? undefined : arguments[1] : {};
-
-	var buildUrl = function buildUrl(account) {
-		var url = "";
-		if (account.indexOf("http://") !== 0 && account.indexOf("https://") !== 0) {
-			url = "https://" + account;
-			// Assume leankit.com if no domain is specified
-			if (account.indexOf(".") === -1) {
-				url += ".leankit.com";
-			}
-		} else {
-			url = account;
-		}
-		if (url.indexOf("/", account.length - 1) !== 0) {
-			url += "/";
-		}
-		return url;
-		// return url + "kanban/api/";
-	};
+	var email = arguments.length > 2 ? arguments.length <= 1 ? undefined : arguments[1] : null; // eslint-disable-line no-magic-numbers
+	var password = arguments.length > 2 ? arguments.length <= 2 ? undefined : arguments[2] : null; // eslint-disable-line no-magic-numbers
+	var options = void 0;
+	switch (arguments.length) {
+		case 4:
+			// eslint-disable-line no-magic-numbers
+			options = arguments.length <= 3 ? undefined : arguments[3]; // eslint-disable-line no-magic-numbers
+			break;
+		case 2:
+			// eslint-disable-line no-magic-numbers
+			options = arguments.length <= 1 ? undefined : arguments[1];
+			break;
+		default:
+			options = {};
+	}
+	options = options || {};
 
 	var boardIdentifiers = {};
-
-	options = options || {};
 
 	var defaultWipOverrideReason = "WIP Override performed by external system";
 	var url = buildUrl(account);
@@ -44,7 +112,7 @@ var LeanKitClient = function LeanKitClient() {
 	}
 
 	if (options.proxy && (options.proxy.indexOf("localhost") > -1 || options.proxy.indexOf("127.0.0.1") > -1)) {
-		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 	}
 
 	if (!options.headers) {
@@ -80,78 +148,23 @@ var LeanKitClient = function LeanKitClient() {
 
 	var client = request.defaults(options);
 
-	var parseReplyData = function parseReplyData(error, response, body, callback, cacheCallback) {
-		if (error) {
-			if (error instanceof Error) {
-				return callback(error, body);
-			} else {
-				var err = new Error(error.toString());
-				err.name = "clientRequestError";
-				return callback(err, body);
-			}
-		} else if (response.statusCode !== 200) {
-			var _err = new Error(body);
-			_err.name = "clientRequestError";
-			_err.replyCode = response.statusCode;
-			return callback(_err, body);
-		} else if (body && body.ReplyCode && body.ReplyCode > 399) {
-			var _err2 = new Error(body.ReplyText || "apiError");
-			_err2.name = "apiError";
-			_err2.httpStatusCode = body.ReplyCode;
-			_err2.replyCode = body.ReplyCode;
-			_err2.replyText = body.ReplyText;
-			_err2.replyData = body.ReplyData;
-			return callback(_err2);
-		} else if (body && body.ReplyCode && body.ReplyCode !== 200 && body.ReplyCode !== 201) {
-			return callback(null, body);
-		} else if (body.ReplyData && body.ReplyData.length > 0) {
-			if (typeof cacheCallback === "function") {
-				cacheCallback(body.ReplyData[0]);
-			}
-			return callback(null, body.ReplyData[0]);
-		} else {
-			return callback(null, body);
-		}
-	};
-
-	var parseBody = function parseBody(body) {
-		var err = void 0,
-		    parsed = void 0;
-		if (typeof body === "string" && body !== "") {
-			try {
-				parsed = JSON.parse(body);
-			} catch (_error) {
-				err = _error;
-				parsed = body;
-			}
-		} else {
-			parsed = body;
-		}
-		return { err: err, body: parsed };
-	};
-
-	var checkPath = function checkPath(path) {
-		return path.startsWith("api/") ? path : "kanban/api/" + path;
-	};
-
-	var clientGet = function clientGet(path, callback) {
+	var clientGet = function clientGet(urlPath, callback) {
 		var p = when.promise(function (resolve, reject) {
-			path = checkPath(path);
-			client.get(path, function (err, res, body) {
+			urlPath = checkPath(urlPath);
+			client.get(urlPath, function (err, res, body) {
 				if (err) {
 					if (err instanceof Error) {
 						reject(err);
-					} else {
-						var error = new Error("httpGetError");
-						error.details = err;
-						reject(error);
 					}
+					var error = new Error("httpGetError");
+					error.details = err;
+					reject(error);
 				} else {
 					parseReplyData(err, res, body, function (parseErr, parsed) {
-						if (!parseErr) {
-							resolve(parsed);
-						} else {
+						if (parseErr) {
 							reject(parseErr);
+						} else {
+							resolve(parsed);
 						}
 					});
 				}
@@ -160,19 +173,18 @@ var LeanKitClient = function LeanKitClient() {
 
 		if (typeof callback === "function") {
 			p.then(function (res) {
-				return callback(null, res);
+				callback(null, res);
 			}).catch(function (err) {
-				return callback(err);
+				callback(err);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
-	var clientPost = function clientPost(path, data, callback) {
+	var clientPost = function clientPost(urlPath, data, callback) {
 		var p = when.promise(function (resolve, reject) {
-			path = checkPath(path);
-			client.post(path, { body: data }, function (err, res, body) {
+			urlPath = checkPath(urlPath);
+			client.post(urlPath, { body: data }, function (err, res, body) {
 				if (err) {
 					reject(err);
 				} else {
@@ -188,20 +200,19 @@ var LeanKitClient = function LeanKitClient() {
 		});
 		if (typeof callback === "function") {
 			p.then(function (res) {
-				return callback(null, res);
+				callback(null, res);
 			}).catch(function (err) {
-				return callback(err, null);
+				callback(err, null);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
-	var clientSaveFile = function clientSaveFile(path, file, callback) {
+	var clientSaveFile = function clientSaveFile(urlPath, file, callback) {
 		var p = when.promise(function (resolve, reject) {
 			var f = typeof file === "string" ? fs.createWriteStream(file) : file;
-			path = checkPath(path);
-			var res = client.get(path);
+			urlPath = checkPath(urlPath);
+			var res = client.get(urlPath);
 			res.pipe(f);
 			res.on("end", function () {
 				resolve(f);
@@ -209,30 +220,29 @@ var LeanKitClient = function LeanKitClient() {
 		});
 		if (typeof callback === "function") {
 			p.then(function (res) {
-				return callback(null, res);
+				callback(null, res);
 			}).catch(function (err) {
-				return callback(err);
+				callback(err);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
-	var sendFile = function sendFile(path, file, attachmentData, callback) {
+	var sendFile = function sendFile(urlPath, file, attachmentData, callback) {
 		if (typeof file === "string") {
 			attachmentData.file = fs.createReadStream(file);
 		} else {
 			attachmentData.file = file;
 		}
-		client.post({ url: path, formData: attachmentData }, function (err, res, body) {
+		client.post({ url: urlPath, formData: attachmentData }, function (err, res, body) {
 			callback(err, res, body);
 		});
 	};
 
-	var clientSendFile = function clientSendFile(path, file, attachmentData, callback) {
+	var clientSendFile = function clientSendFile(urlPath, file, attachmentData, callback) {
 		var p = when.promise(function (resolve, reject) {
-			path = checkPath(path);
-			sendFile(path, file, attachmentData, function (err, res, body) {
+			urlPath = checkPath(urlPath);
+			sendFile(urlPath, file, attachmentData, function (err, res, body) {
 				if (err) {
 					reject(err);
 				} else {
@@ -247,13 +257,12 @@ var LeanKitClient = function LeanKitClient() {
 		});
 		if (typeof callback === "function") {
 			p.then(function (res) {
-				return callback(null, res);
+				callback(null, res);
 			}).catch(function (err) {
-				return callback(err);
+				callback(err);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
 	var getBoards = function getBoards(callback) {
@@ -293,13 +302,12 @@ var LeanKitClient = function LeanKitClient() {
 		});
 		if (typeof callback === "function") {
 			p.then(function (board) {
-				return callback(null, board);
+				callback(null, board);
 			}, function (err) {
-				return callback(err);
+				callback(err);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
 	var getBoardIdentifiers = function getBoardIdentifiers(boardId, callback) {
@@ -317,13 +325,12 @@ var LeanKitClient = function LeanKitClient() {
 		});
 		if (typeof callback === "function") {
 			p.then(function (data) {
-				return callback(null, data);
+				callback(null, data);
 			}, function (err) {
-				return callback(err);
+				callback(err);
 			});
-		} else {
-			return p;
 		}
+		return p;
 	};
 
 	var getBoardBacklogLanes = function getBoardBacklogLanes(boardId, callback) {
@@ -358,30 +365,33 @@ var LeanKitClient = function LeanKitClient() {
 		return clientGet("board/" + boardId + "/getcardbyexternalid/" + encodeURIComponent(externalCardId), callback);
 	};
 
-	var addCard = function addCard(boardId, laneId, position, card, callback) {
-		return addCardWithWipOverride(boardId, laneId, position, defaultWipOverrideReason, card, callback);
-	};
-
 	var addCardWithWipOverride = function addCardWithWipOverride(boardId, laneId, position, wipOverrideReason, card, callback) {
+		// eslint-disable-line max-params
 		card.UserWipOverrideComment = wipOverrideReason;
 		return clientPost("board/" + boardId + "/AddCardWithWipOverride/Lane/" + laneId + "/Position/" + position, card, callback);
 	};
 
-	var addCards = function addCards(boardId, cards, callback) {
-		return addCardsWithWipOverride(boardId, cards, defaultWipOverrideReason, callback);
+	var addCard = function addCard(boardId, laneId, position, card, callback) {
+		return addCardWithWipOverride(boardId, laneId, position, defaultWipOverrideReason, card, callback);
 	};
 
 	var addCardsWithWipOverride = function addCardsWithWipOverride(boardId, cards, wipOverrideReason, callback) {
 		return clientPost("board/" + boardId + "/AddCards?wipOverrideComment=" + encodeURIComponent(wipOverrideReason), cards, callback);
 	};
 
+	var addCards = function addCards(boardId, cards, callback) {
+		return addCardsWithWipOverride(boardId, cards, defaultWipOverrideReason, callback);
+	};
+
 	var moveCard = function moveCard(boardId, cardId, toLaneId, position, wipOverrideReason, callback) {
+		// eslint-disable-line max-params
 		return clientPost("board/" + boardId + "/movecardwithwipoverride/" + cardId + "/lane/" + toLaneId + "/position/" + position, {
 			comment: wipOverrideReason
 		}, callback);
 	};
 
 	var moveCardByExternalId = function moveCardByExternalId(boardId, externalCardId, toLaneId, position, wipOverrideReason, callback) {
+		// eslint-disable-line max-params
 		return clientPost("board/" + boardId + "/movecardbyexternalid/" + encodeURIComponent(externalCardId) + "/lane/" + toLaneId + "/position/" + position, {
 			comment: wipOverrideReason
 		}, callback);
@@ -409,8 +419,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addComment = function addComment(boardId, cardId, userId, comment, callback) {
-		var data = void 0;
-		data = {
+		var data = {
 			PostedById: userId,
 			Text: comment
 		};
@@ -418,8 +427,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addCommentByExternalId = function addCommentByExternalId(boardId, externalCardId, userId, comment, callback) {
-		var data = void 0;
-		data = {
+		var data = {
 			PostedById: userId,
 			Text: comment
 		};
@@ -430,8 +438,8 @@ var LeanKitClient = function LeanKitClient() {
 		return clientGet("card/history/" + boardId + "/" + cardId, callback);
 	};
 
-	var searchCards = function searchCards(boardId, options, callback) {
-		return clientPost("board/" + boardId + "/searchcards", options, callback);
+	var searchCards = function searchCards(boardId, searchOptions, callback) {
+		return clientPost("board/" + boardId + "/searchcards", searchOptions, callback);
 	};
 
 	var getNewCards = function getNewCards(boardId, callback) {
@@ -469,6 +477,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var moveTask = function moveTask(boardId, cardId, taskId, toLaneId, position, callback) {
+		// eslint-disable-line max-params
 		return clientPost("v1/board/" + boardId + "/move/card/" + cardId + "/tasks/" + taskId + "/lane/" + toLaneId + "/position/" + position, null, callback);
 	};
 
@@ -493,14 +502,13 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var addAttachment = function addAttachment(boardId, cardId, description, file, callback) {
-		var attachmentData = void 0,
-		    fileName = void 0;
+		var fileName = void 0;
 		if (typeof file === "string") {
 			fileName = path.basename(file);
 		} else {
 			fileName = path.basename(file.path);
 		}
-		attachmentData = {
+		var attachmentData = {
 			Id: 0,
 			Description: description,
 			FileName: fileName
@@ -509,7 +517,7 @@ var LeanKitClient = function LeanKitClient() {
 	};
 
 	var getCurrentUserProfile = function getCurrentUserProfile() {
-		var boardId = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+		var boardId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
 
 		return clientGet("api/user/getcurrentusersettings/" + boardId);
 	};
