@@ -20,12 +20,12 @@ describe( "Events Tests", () => { //eslint-disable-line
 	const boardId = 101;
 	const version = 1;
 
-	let testWaitForNextUpdate = function( eventType ) {
-		return events.waitForNextUpdate().then( ( res ) => {
+	const testCheckForUpdates = eventType => {
+		return events.checkForUpdates().then( res => {
 			// console.log( res );
 			res.should.be.ok;
 			res.should.be.instanceOf( Array );
-			let e = res.find( ( ev ) => {
+			const e = res.find( ( ev ) => {
 				return ev.eventType === eventType;
 			} );
 			should.exist( e );
@@ -159,8 +159,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -180,8 +180,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -201,8 +201,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -230,8 +230,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -251,8 +251,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -272,8 +272,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -293,8 +293,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -314,8 +314,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -335,8 +335,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -356,8 +356,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -377,8 +377,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -398,8 +398,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -419,8 +419,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -440,8 +440,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -461,8 +461,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -482,8 +482,8 @@ describe( "Events Tests", () => { //eslint-disable-line
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
