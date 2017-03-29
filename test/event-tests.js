@@ -1,8 +1,8 @@
-let jetpack = require( "fs-jetpack" );
-let nock = require( "nock" );
-let chai = require( "chai" );
-let should = chai.should();
-let chaiAsPromised = require( "chai-as-promised" );
+const jetpack = require( "fs-jetpack" );
+const nock = require( "nock" );
+const chai = require( "chai" );
+const should = chai.should();
+const chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
 import LeanKitClient from "../src/client";
 import LeanKitEvents from "../src/events";
@@ -12,7 +12,7 @@ const pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
 const proxy = process.env.LEANKIT_PROXY || null;
 // const boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
 
-describe( "Events Tests", () => {
+describe( "Events Tests", () => { //eslint-disable-line
 	let client = {};
 	// let board = {};
 	let events = {};
@@ -20,24 +20,24 @@ describe( "Events Tests", () => {
 	const boardId = 101;
 	const version = 1;
 
-	let testWaitForNextUpdate = function( eventType ) {
-		return events.waitForNextUpdate().then( ( res ) => {
+	const testCheckForUpdates = eventType => {
+		return events.checkForUpdates().then( res => {
 			// console.log( res );
 			res.should.be.ok;
 			res.should.be.instanceOf( Array );
-			let e = res.find( ( ev ) => {
+			const e = res.find( ( ev ) => {
 				return ev.eventType === eventType;
 			} );
 			should.exist( e );
 			e.should.have.property( "eventDateTime" );
 			e.should.have.property( "boardVersion" );
 		}, ( err ) => {
-			console.log( "ERR:", err );
+			// console.log( "ERR:", err );
 			should.not.exist( err );
 		} );
 	};
 
-	let testEventEmitter = function( events, eventType, done ) {
+	let testEventEmitter = function( eventType, done ) {
 		events.once( eventType, ( e ) => {
 			events.stop();
 			e.should.have.property( "eventType" ).that.is.equal( eventType );
@@ -159,12 +159,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -180,12 +180,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -201,8 +201,8 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
@@ -230,12 +230,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -251,12 +251,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -272,12 +272,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -293,12 +293,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -314,12 +314,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -335,12 +335,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -356,12 +356,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -377,12 +377,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -398,12 +398,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -419,12 +419,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -440,12 +440,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -461,12 +461,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 
@@ -482,12 +482,12 @@ describe( "Events Tests", () => {
 			nock.cleanAll();
 		} );
 
-		it( "waitForNextUpdate should return correct event", () => {
-			return testWaitForNextUpdate( eventType );
+		it( "checkForUpdates should return correct event", () => {
+			return testCheckForUpdates( eventType );
 		} );
 
 		it( "should emit correct event", ( done ) => {
-			testEventEmitter( events, eventType, done );
+			testEventEmitter( eventType, done );
 		} );
 	} );
 } );
