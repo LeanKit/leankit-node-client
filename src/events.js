@@ -16,7 +16,6 @@ const camelClone = obj => {
 	return clone;
 };
 
-
 export default class LeanKitNotifier extends EventEmitter {
 	constructor( client, boardId, version = 0, pollInterval = DEFAULT_POLL_INTERVAL, resumeAfterError = true ) {
 		super();

@@ -1,118 +1,118 @@
-let chai = require( "chai" );
-let should = chai.should();
-let chaiAsPromised = require( "chai-as-promised" );
+const chai = require( "chai" );
+const should = chai.should();
+const chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
-let when = require( "when" );
+const when = require( "when" );
 
 const TEST_TIMEOUT = 20000;
-let fs = require( "fs" );
-let _ = require( "lodash" );
-import LeanKitClient from "../src/client";
-let nock = require( "nock" );
-let accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
-let email = process.env.LEANKIT_EMAIL || "your@email.com";
-let pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
-let proxy = process.env.LEANKIT_PROXY || null;
-let boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
+const fs = require( "fs" );
+const _ = require( "lodash" );
+import LeanKitClient from "../src/client.v1.js";
+const nock = require( "nock" );
+const accountName = process.env.LEANKIT_ACCOUNT || "your-account-name";
+const email = process.env.LEANKIT_EMAIL || "your@email.com";
+const pwd = process.env.LEANKIT_PASSWORD || "p@ssw0rd";
+const proxy = process.env.LEANKIT_PROXY || null;
+const boardToFind = process.env.LEANKIT_TEST_BOARD || "API Test Board";
 let client = null;
 let boards = null;
 let board = null;
 let boardIdentifiers = null;
 let user = null;
-let cardTemplate = {
-		Id: 0,
-		Title: "Mocha Test Card",
-		Description: "",
-		TypeId: 0,
-		Priority: 1,
-		Size: 0,
-		IsBlocked: false,
-		BlockReason: "",
-		DueDate: "",
-		ExternalSystemName: "",
-		ExternalSystemUrl: "",
-		Tags: "",
-		ClassOfServiceId: null,
-		ExternalCardID: "",
-		AssignedUserIds: [],
-		UserWipOverrideComment: "Because..."
-	};
+const cardTemplate = {
+	Id: 0,
+	Title: "Mocha Test Card",
+	Description: "",
+	TypeId: 0,
+	Priority: 1,
+	Size: 0,
+	IsBlocked: false,
+	BlockReason: "",
+	DueDate: "",
+	ExternalSystemName: "",
+	ExternalSystemUrl: "",
+	Tags: "",
+	ClassOfServiceId: null,
+	ExternalCardID: "",
+	AssignedUserIds: [],
+	UserWipOverrideComment: "Because..."
+};
 
 // fiddler proxy: "http://127.0.0.1:8888"
 
-let getTestBoard = () => {
+const getTestBoard = () => {
 	return when.promise( ( resolve, reject ) => {
 		if ( !board ) {
-			client.getBoards().then( ( res ) => {
+			client.getBoards().then( res => {
 				boards = res;
-				let tb = boards.find( ( b ) => {
+				const tb = boards.find( b => {
 					return b.Title === boardToFind;
 				} );
 				return client.getBoard( tb.Id );
-			} ).then( ( res ) => {
+			} ).then( res => {
 				board = res;
 				user = board.BoardUsers[ 0 ];
 				return client.getBoardIdentifiers( board.Id );
-			} ).then( ( res ) => {
+			} ).then( res => {
 				boardIdentifiers = res;
-				resolve( { board: board, boardIdentifiers: boardIdentifiers } );
+				resolve( { board, boardIdentifiers } );
 			} );
 		} else {
-			resolve( { board: board, boardIdentifiers: boardIdentifiers } );
+			resolve( { board, boardIdentifiers } );
 		}
 	} );
 };
 
-let makeTestCard = ( board, boardIdentifiers ) => {
+const makeTestCard = ( board, boardIdentifiers ) => {
 	return when.promise( ( resolve, reject ) => {
-		let card = {
-				Id: 0,
-				Title: "Mocha Test Card",
-				Description: "",
-				TypeId: 0,
-				Priority: 1,
-				Size: 0,
-				IsBlocked: false,
-				BlockReason: "",
-				DueDate: "",
-				ExternalSystemName: "",
-				ExternalSystemUrl: "",
-				Tags: "",
-				ClassOfServiceId: null,
-				ExternalCardID: "",
-				AssignedUserIds: [],
-				UserWipOverrideComment: "Because..."
-			};
+		const card = {
+			Id: 0,
+			Title: "Mocha Test Card",
+			Description: "",
+			TypeId: 0,
+			Priority: 1,
+			Size: 0,
+			IsBlocked: false,
+			BlockReason: "",
+			DueDate: "",
+			ExternalSystemName: "",
+			ExternalSystemUrl: "",
+			Tags: "",
+			ClassOfServiceId: null,
+			ExternalCardID: "",
+			AssignedUserIds: [],
+			UserWipOverrideComment: "Because..."
+		};
 
 		// Get the first active lane
-		let lane = _.find( boardIdentifiers.Lanes, {
+		const lane = _.find( boardIdentifiers.Lanes, {
 			LaneClassType: 0, Index: 0
 		} );
 
 		// Get the default card type
-		let cardType = _.find( board.CardTypes, {
+		const cardType = _.find( board.CardTypes, {
 			IsDefault: true
 		} );
 
 		card.TypeId = cardType.Id;
-		let now = new Date();
-		card.Title = "Mocha test card " + now.getTime();
+		const now = new Date();
+		card.Title = `Mocha test card ${ now.getTime() }`;
 		card.ExternalCardID = now.getTime();
 
 		client.addCard( board.Id, lane.Id, 0, card )
-			.then( ( res ) => {
+			.then( res => {
 				return client.getCard( board.Id, res.CardId );
 			} )
-			.then( ( card ) => {
+			.then( card => {
 				resolve( card );
 			} )
-			.catch( ( err ) => {
+			.catch( err => {
 				reject( err );
 			} );
 	} );
 };
 
-let removeTestCard = ( boardId, id ) => {
+const removeTestCard = ( boardId, id ) => {
 	return client.deleteCard( boardId, id );
 };
 
@@ -123,9 +123,9 @@ describe( "LeanKitClient", function() {
 		if ( !proxy ) {
 			client = new LeanKitClient( accountName, email, pwd );
 		} else {
-			process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 			client = new LeanKitClient( accountName, email, pwd, {
-				proxy: proxy
+				proxy
 			} );
 		}
 	} );
@@ -133,7 +133,7 @@ describe( "LeanKitClient", function() {
 	describe( "Board API", () => {
 		let boards = null;
 		let board = null;
-		it( "should return a list of boards", ( done ) => {
+		it( "should return a list of boards", done => {
 			client.getBoards( ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -143,21 +143,21 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return a list of new boards", ( done ) => {
+		it( "should return a list of new boards", done => {
 			client.getNewBoards( ( err, res ) => {
 				res.length.should.be.above( 0 );
 				done();
 			} );
 		} );
 
-		it( "should return a valid board by ID", ( done ) => {
+		it( "should return a valid board by ID", done => {
 			client.getBoard( boards[ 0 ].Id, ( err, res ) => {
 				res.Id.should.equal( boards[ 0 ].Id );
 				done();
 			} );
 		} );
 
-		it( "should return a valid board by name", ( done ) => {
+		it( "should return a valid board by name", done => {
 			client.getBoardByName( boardToFind, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -168,7 +168,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return a valid set of board identifiers", ( done ) => {
+		it( "should return a valid set of board identifiers", done => {
 			should.exist( board );
 			client.getBoardIdentifiers( board.Id, ( err, res ) => {
 				res.Lanes.length.should.be.above( 0 );
@@ -177,7 +177,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return a valid set of backlog lanes", ( done ) => {
+		it( "should return a valid set of backlog lanes", done => {
 			should.exist( board );
 			client.getBoardBacklogLanes( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
@@ -186,7 +186,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return a valid set of archive lanes", ( done ) => {
+		it( "should return a valid set of archive lanes", done => {
 			should.exist( board );
 			client.getBoardArchiveLanes( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
@@ -195,7 +195,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return cards from the archive", ( done ) => {
+		it( "should return cards from the archive", done => {
 			should.exist( board );
 			client.getBoardArchiveCards( board.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
@@ -207,75 +207,75 @@ describe( "LeanKitClient", function() {
 	describe( "Board Promise API", () => {
 		let boards = null;
 		let board = null;
-		it( "should return a list of boards as a promise", ( done ) => {
-			return client.getBoards().then( ( res ) => {
+		it( "should return a list of boards as a promise", done => {
+			return client.getBoards().then( res => {
 				should.exist( res );
 				res.length.should.be.above( 0 );
 				boards = res;
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a list of new boards", ( done ) => {
-			return client.getNewBoards().then( ( res ) => {
+		it( "should return a list of new boards", done => {
+			return client.getNewBoards().then( res => {
 				res.length.should.be.above( 0 );
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a valid board by ID", ( done ) => {
-			return client.getBoard( boards[ 0 ].Id ).then( ( res ) => {
+		it( "should return a valid board by ID", done => {
+			return client.getBoard( boards[ 0 ].Id ).then( res => {
 				res.Id.should.equal( boards[ 0 ].Id );
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a valid board by name", ( done ) => {
-			return client.getBoardByName( boardToFind ).then( ( res ) => {
+		it( "should return a valid board by name", done => {
+			return client.getBoardByName( boardToFind ).then( res => {
 				res.Title.should.equal( boardToFind );
 				res.Lanes.length.should.be.above( 0 );
 				board = res;
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a valid set of board identifiers", ( done ) => {
+		it( "should return a valid set of board identifiers", done => {
 			should.exist( board );
-			return client.getBoardIdentifiers( board.Id ).then( ( res ) => {
+			return client.getBoardIdentifiers( board.Id ).then( res => {
 				res.should.be.ok;
 				res.Lanes.length.should.be.above( 0 );
 				res.CardTypes.length.should.be.above( 0 );
 				boardIdentifiers = res;
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a valid set of backlog lanes", ( done ) => {
+		it( "should return a valid set of backlog lanes", done => {
 			should.exist( board );
-			return client.getBoardBacklogLanes( board.Id ).then( ( res ) => {
+			return client.getBoardBacklogLanes( board.Id ).then( res => {
 				res.length.should.be.above( 0 );
 				res[ 0 ].Width.should.be.above( 0 );
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return a valid set of archive lanes", ( done ) => {
+		it( "should return a valid set of archive lanes", done => {
 			should.exist( board );
-			return client.getBoardArchiveLanes( board.Id ).then( ( res ) => {
+			return client.getBoardArchiveLanes( board.Id ).then( res => {
 				res.length.should.be.above( 0 );
 				res[ 0 ].Lane.Width.should.be.above( 0 );
 			} ).should.notify( done );
 		} );
 
-		it( "should return cards from the archive", ( done ) => {
+		it( "should return cards from the archive", done => {
 			should.exist( board );
-			return client.getBoardArchiveCards( board.Id ).then( ( res ) => {
+			return client.getBoardArchiveCards( board.Id ).then( res => {
 				res.length.should.be.above( 0 );
 			} ).should.notify( done );
 		} );
@@ -288,7 +288,7 @@ describe( "LeanKitClient", function() {
 		let boardIdentifiers = null;
 
 		before( function() {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				boardIdentifiers = res.boardIdentifiers;
 			} );
@@ -305,22 +305,22 @@ describe( "LeanKitClient", function() {
 			should.exist( boardIdentifiers );
 
 			// Get the first active lane
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				IsDefaultDropLane: true
 			} );
 			lane.Id.should.be.above( 0 );
 
 			// Get the default card type
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefault: true
 			} );
 			cardType.Id.should.be.above( 0 );
 
-			let card = _.clone( cardTemplate );
+			const card = _.clone( cardTemplate );
 
 			card.TypeId = cardType.Id;
-			let now = new Date();
-			card.Title = "Mocha test card " + now.getTime();
+			const now = new Date();
+			card.Title = `Mocha test card ${ now.getTime() }`;
 			card.ExternalCardID = now.getTime();
 
 			client.addCard( board.Id, lane.Id, 0, card, ( err, res ) => {
@@ -337,26 +337,26 @@ describe( "LeanKitClient", function() {
 
 		it( "should add multiple cards without error", function( done ) {
 			should.exist( boardIdentifiers );
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				IsDefaultDropLane: true
 			} );
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefault: true
 			} );
 			cardType.Id.should.be.above( 0 );
-			let now = new Date();
+			const now = new Date();
 			let externalCardId = now.getTime();
 
-			let card1 = _.clone( cardTemplate );
+			const card1 = _.clone( cardTemplate );
 			card1.Id = 0;
-			card1.Title = "AddCards Card 1 " + externalCardId;
+			card1.Title = `AddCards Card 1 ${ externalCardId }`;
 			card1.ExternalCardID = externalCardId;
 			card1.LaneId = lane.Id;
 			card1.TypeId = cardType.Id;
 			externalCardId++;
 
-			let card2 = _.clone( card1 );
-			card2.Title = "AddCards Card 2 " + externalCardId;
+			const card2 = _.clone( card1 );
+			card2.Title = `AddCards Card 2 ${ externalCardId }`;
 			card2.ExternalCardID = externalCardId;
 
 			client.addCards( board.Id, [ card1, card2 ], function( err, res ) {
@@ -370,7 +370,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return the test card by ID", ( done ) => {
+		it( "should return the test card by ID", done => {
 			should.exist( board );
 			client.getCard( board.Id, testCardId, ( err, res ) => {
 				should.not.exist( err );
@@ -381,7 +381,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should return the test card by external ID", ( done ) => {
+		it( "should return the test card by external ID", done => {
 			should.exist( testCard );
 			testCard.Id.should.be.above( 0 );
 			client.getCardByExternalId( board.Id, testCard.ExternalCardID, ( err, res ) => {
@@ -390,46 +390,46 @@ describe( "LeanKitClient", function() {
 				should.exist( res );
 				// getCardByExternalId returns an array
 				res.length.should.equal( 1 );
-				let card = res[ 0 ];
+				const card = res[ 0 ];
 				card.Id.should.equal( testCard.Id );
 				done();
 			} );
 		} );
 
-		it( "moveCard() should move card to 2nd active lane", ( done ) => {
+		it( "moveCard() should move card to 2nd active lane", done => {
 			testCard.Id.should.be.above( 0 );
 			// Find first active lane
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				LaneType: 2,
 				Index: 2
 			} );
 			should.exist( lane );
-			let position = 0;
+			const position = 0;
 			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing...", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "moveCardByExternalId() should move card back to 1st active lane", ( done ) => {
+		it( "moveCardByExternalId() should move card back to 1st active lane", done => {
 			testCard.Id.should.be.above( 0 );
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				IsDefaultDropLane: true
 			} );
-			let position = 0;
+			const position = 0;
 			client.moveCardByExternalId( board.Id, testCard.ExternalCardID, lane.Id, position, "Moving card for testing...", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it.skip( "should move card to another board", ( done ) => {
+		it.skip( "should move card to another board", done => {
 			testCard.Id.should.be.above( 0 );
 			// Find a destination board
-			let otherBoards = _.remove( boards, ( b ) => {
+			const otherBoards = _.remove( boards, b => {
 				return b.Id !== board.Id;
 			} );
-			let destinationBoard = otherBoards[ 0 ];
+			const destinationBoard = otherBoards[ 0 ];
 			destinationBoard.Id.should.not.equal( board.Id );
 
 			client.moveCardToBoard( testCard.Id, destinationBoard.Id, ( err, res ) => {
@@ -442,20 +442,20 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "updateCard() should update a card without error", ( done ) => {
+		it( "updateCard() should update a card without error", done => {
 			testCard.Id.should.be.above( 0 );
-			testCard.Title = "Updated test card " + testCard.ExternalCardID;
+			testCard.Title = `Updated test card ${ testCard.ExternalCardID }`;
 			client.updateCard( board.Id, testCard, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "updateCardFields() should update a card without error", ( done ) => {
+		it( "updateCardFields() should update a card without error", done => {
 			testCard.Id.should.be.above( 0 );
-			let updateFields = {
+			const updateFields = {
 				CardId: testCard.Id,
-				Title: "Test Card update 2 " + testCard.ExternalCardID,
+				Title: `Test Card update 2 ${ testCard.ExternalCardID }`,
 				Tags: "test"
 			};
 			client.updateCardFields( updateFields, ( err, res ) => {
@@ -464,23 +464,23 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "updateCards() should update multiple cards without error", ( done ) => {
+		it( "updateCards() should update multiple cards without error", done => {
 			should.exist( board );
 			// Get the latest version of the test board
 			client.getBoard( board.Id, ( err, res ) => {
-				let b = res;
-				let lane = _.find( b.Lanes, {
+				const b = res;
+				const lane = _.find( b.Lanes, {
 					IsDefaultDropLane: true
 				} );
 				// console.log(b);
 				// Filter out cards that do no start with "AddCards"
-				let cards = _.remove( lane.Cards, ( card ) => {
+				const cards = _.remove( lane.Cards, card => {
 					return card.Title && card.Title.indexOf( "AddCards" ) === 0;
 				} );
 				should.exist( cards );
 				cards.length.should.be.greaterThan( 1 );
 				// console.log(cards);
-				cards.forEach( ( card ) => {
+				cards.forEach( card => {
 					card.Tags = "updateCards";
 					card.Priority = 2;
 				} );
@@ -495,7 +495,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "addComment() should add a comment without error", ( done ) => {
+		it( "addComment() should add a comment without error", done => {
 			should.exist( testCard );
 			testCard.Id.should.be.above( 0 );
 			client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment.", ( err, res ) => {
@@ -504,7 +504,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "addCommentByExternalId() should add a comment without error", ( done ) => {
+		it( "addCommentByExternalId() should add a comment without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.addCommentByExternalId( board.Id, testCard.ExternalCardID, user.Id, "Adding a test comment by external id.", ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
@@ -512,7 +512,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get comments without error", ( done ) => {
+		it( "should get comments without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getComments( board.Id, testCard.Id, ( err, res ) => {
 				res.length.should.equal( 2 );
@@ -521,7 +521,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get card history without error", ( done ) => {
+		it( "should get card history without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getCardHistory( board.Id, testCard.Id, ( err, res ) => {
 				res.length.should.be.above( 0 );
@@ -529,7 +529,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should delete test card without error", ( done ) => {
+		it( "should delete test card without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.deleteCard( board.Id, testCard.Id, ( err, res ) => {
 				res.ReplyCode.should.equal( 203 );
@@ -539,11 +539,11 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should delete multiple cards without error", ( done ) => {
+		it( "should delete multiple cards without error", done => {
 			// Get the latest version of the test board
 			client.getBoard( board.Id, ( err, res ) => {
-				let b = res;
-				let lane = _.find( b.Lanes, {
+				const b = res;
+				const lane = _.find( b.Lanes, {
 					IsDefaultDropLane: true
 				} );
 
@@ -551,7 +551,7 @@ describe( "LeanKitClient", function() {
 				lane.Cards.length.should.be.above( 1 );
 
 				// Filter out cards that do no start with "AddCards"
-				let cards = _.remove( lane.Cards, ( card ) => {
+				const cards = _.remove( lane.Cards, card => {
 					return card.Title ? card.Title.indexOf( "AddCards" ) === 0 : false;
 				} );
 
@@ -565,15 +565,15 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should not add a card with an incorrect lane ID", ( done ) => {
+		it( "should not add a card with an incorrect lane ID", done => {
 			should.exist( board );
 			should.exist( boardIdentifiers );
 
-			let card = _.clone( cardTemplate );
+			const card = _.clone( cardTemplate );
 
 			card.TypeId = 123; // bogus type ID
-			let now = new Date();
-			card.Title = "Mocha test card " + now.getTime();
+			const now = new Date();
+			card.Title = `Mocha test card ${ now.getTime() }`;
 			card.ExternalCardID = now.getTime();
 
 			client.addCard( board.Id, 123, 0, card, ( err, res ) => {
@@ -595,7 +595,7 @@ describe( "LeanKitClient", function() {
 		let boardIdentifiers = null;
 
 		before( function() {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				boardIdentifiers = res.boardIdentifiers;
 			} );
@@ -607,18 +607,18 @@ describe( "LeanKitClient", function() {
 			}
 		} );
 
-		it( "should not add a card with an incorrect lane ID", ( done ) => {
+		it( "should not add a card with an incorrect lane ID", done => {
 			should.exist( board );
 			should.exist( boardIdentifiers );
 
-			let card = _.clone( cardTemplate );
+			const card = _.clone( cardTemplate );
 
 			card.TypeId = 123; // bogus type ID
-			let now = new Date();
-			card.Title = "Mocha test card " + now.getTime();
+			const now = new Date();
+			card.Title = `Mocha test card ${ now.getTime() }`;
 			card.ExternalCardID = now.getTime();
 
-			client.addCard( board.Id, 123, 0, card ).then( ( res ) => {
+			client.addCard( board.Id, 123, 0, card ).then( res => {
 				should.not.exist( res );
 				done();
 			} ).catch( err => {
@@ -636,29 +636,29 @@ describe( "LeanKitClient", function() {
 			should.exist( boardIdentifiers );
 
 			// Get the first active lane
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				LaneClassType: 0, Index: 0
 			} );
 			lane.Id.should.be.above( 0 );
 
 			// Get the default card type
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefault: true
 			} );
 			cardType.Id.should.be.above( 0 );
 
-			let card = _.clone( cardTemplate );
+			const card = _.clone( cardTemplate );
 
 			card.TypeId = cardType.Id;
-			let now = new Date();
-			card.Title = "Mocha test card " + now.getTime();
+			const now = new Date();
+			card.Title = `Mocha test card ${ now.getTime() }`;
 			card.ExternalCardID = now.getTime();
 
-			return client.addCard( board.Id, lane.Id, 0, card ).then( ( res ) => {
+			return client.addCard( board.Id, lane.Id, 0, card ).then( res => {
 				should.exist( res );
 				res.CardId.should.be.above( 0 );
 				testCardId = res.CardId;
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -666,119 +666,119 @@ describe( "LeanKitClient", function() {
 
 		it( "should add multiple cards without error", function( done ) {
 			should.exist( boardIdentifiers );
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				IsDefaultDropLane: true
 			} );
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefault: true
 			} );
 			cardType.Id.should.be.above( 0 );
-			let now = new Date();
+			const now = new Date();
 			let externalCardId = now.getTime();
 
-			let card1 = _.clone( cardTemplate );
+			const card1 = _.clone( cardTemplate );
 			card1.Id = 0;
-			card1.Title = "AddCards Card 1 " + externalCardId;
+			card1.Title = `AddCards Card 1 ${ externalCardId }`;
 			card1.ExternalCardID = externalCardId;
 			card1.LaneId = lane.Id;
 			card1.TypeId = cardType.Id;
 			externalCardId++;
 
-			let card2 = _.clone( card1 );
-			card2.Title = "AddCards Card 2 " + externalCardId;
+			const card2 = _.clone( card1 );
+			card2.Title = `AddCards Card 2 ${ externalCardId }`;
 			card2.ExternalCardID = externalCardId;
 
-			return client.addCards( board.Id, [ card1, card2 ] ).then( ( res ) => {
+			return client.addCards( board.Id, [ card1, card2 ] ).then( res => {
 				should.exist( res );
 				res.length.should.equal( 2 );
 				res[ 0 ].Title.should.have.string( "AddCards" );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return the test card by ID", ( done ) => {
+		it( "should return the test card by ID", done => {
 			should.exist( board );
-			return client.getCard( board.Id, testCardId ).then( ( res ) => {
+			return client.getCard( board.Id, testCardId ).then( res => {
 				testCard = res;
 				testCard.Id.should.equal( testCardId );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should return the test card by external ID", ( done ) => {
+		it( "should return the test card by external ID", done => {
 			should.exist( testCard );
 			testCard.Id.should.be.above( 0 );
-			return client.getCardByExternalId( board.Id, testCard.ExternalCardID ).then( ( res ) => {
+			return client.getCardByExternalId( board.Id, testCard.ExternalCardID ).then( res => {
 				should.exist( res );
 				// getCardByExternalId returns an array
 				res.length.should.equal( 1 );
-				let card = res[ 0 ];
+				const card = res[ 0 ];
 				card.Id.should.equal( testCard.Id );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "moveCard() should move card to 2nd active lane", ( done ) => {
+		it( "moveCard() should move card to 2nd active lane", done => {
 			testCard.Id.should.be.above( 0 );
 			// Find first active lane
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				LaneType: 2,
 				Index: 2
 			} );
 			should.exist( lane );
-			let position = 0;
-			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing..." ).then( ( res ) => {
+			const position = 0;
+			client.moveCard( board.Id, testCard.Id, lane.Id, position, "Moving card for testing..." ).then( res => {
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "moveCardByExternalId() should move card back to 1st active lane", ( done ) => {
+		it( "moveCardByExternalId() should move card back to 1st active lane", done => {
 			testCard.Id.should.be.above( 0 );
-			let lane = _.find( boardIdentifiers.Lanes, {
+			const lane = _.find( boardIdentifiers.Lanes, {
 				IsDefaultDropLane: true
 			} );
-			let position = 0;
-			return client.moveCardByExternalId( board.Id, testCard.ExternalCardID, lane.Id, position, "Moving card for testing..." ).then( ( res ) => {
+			const position = 0;
+			return client.moveCardByExternalId( board.Id, testCard.ExternalCardID, lane.Id, position, "Moving card for testing..." ).then( res => {
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it.skip( "should move card to another board", ( done ) => {
+		it.skip( "should move card to another board", done => {
 			testCard.Id.should.be.above( 0 );
 			// Find a destination board
-			let otherBoards = _.remove( boards, ( b ) => {
+			const otherBoards = _.remove( boards, b => {
 				return b.Id !== board.Id;
 			} );
-			let destinationBoard = otherBoards[ 0 ];
+			const destinationBoard = otherBoards[ 0 ];
 			destinationBoard.Id.should.not.equal( board.Id );
 
-			return client.moveCardToBoard( testCard.Id, destinationBoard.Id ).then( ( res ) => {
+			return client.moveCardToBoard( testCard.Id, destinationBoard.Id ).then( res => {
 				res.ReplyCode.should.equal( 202 );
 
 				// Move it back
 				return client.moveCardToBoard( testCard.Id, board.Id );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "updateCard() should update a card without error", ( done ) => {
+		it( "updateCard() should update a card without error", done => {
 			testCard.Id.should.be.above( 0 );
 			return client.getCard( board.Id, testCard.Id ).then( card => {
-				card.Title = "Updated test card " + testCard.ExternalCardID;
+				card.Title = `Updated test card ${ testCard.ExternalCardID }`;
 				return client.updateCard( board.Id, card );
 			} ).then( res => {
 				res.ReplyCode.should.equal( 202 );
@@ -787,42 +787,42 @@ describe( "LeanKitClient", function() {
 			} ).should.notify( done );
 		} );
 
-		it( "updateCardFields() should update a card without error", ( done ) => {
+		it( "updateCardFields() should update a card without error", done => {
 			testCard.Id.should.be.above( 0 );
-			let updateFields = {
+			const updateFields = {
 				CardId: testCard.Id,
-				Title: "Test Card update 2 " + testCard.ExternalCardID,
+				Title: `Test Card update 2 ${ testCard.ExternalCardID }`,
 				Tags: "test"
 			};
-			return client.updateCardFields( updateFields ).then( ( res ) => {
+			return client.updateCardFields( updateFields ).then( res => {
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "updateCards() should update multiple cards without error", ( done ) => {
+		it( "updateCards() should update multiple cards without error", done => {
 			should.exist( board );
 			// Get the latest version of the test board
 			return client.getBoard( board.Id ).then( b => {
 				should.exist( b );
-				let lane = _.find( b.Lanes, {
+				const lane = _.find( b.Lanes, {
 					IsDefaultDropLane: true
 				} );
 				should.exist( lane );
 				// Filter out cards that do no start with "AddCards"
-				let cards = _.remove( lane.Cards, ( card ) => {
+				const cards = _.remove( lane.Cards, card => {
 					return card.Title && card.Title.indexOf( "AddCards" ) === 0;
 				} );
 				should.exist( cards );
 				cards.length.should.be.greaterThan( 1 );
 				// console.log(cards);
-				cards.forEach( ( card ) => {
+				cards.forEach( card => {
 					card.Tags = "updateCards";
 					card.Priority = 2;
 				} );
-				return client.updateCards( b.Id, cards);
+				return client.updateCards( b.Id, cards );
 			}, err => {
 				should.not.exist( err );
 			} ).then( res2 => {
@@ -834,64 +834,64 @@ describe( "LeanKitClient", function() {
 			} ).should.notify( done );
 		} );
 
-		it( "addComment() should add a comment without error", ( done ) => {
+		it( "addComment() should add a comment without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment." ).then( ( res ) => {
+			return client.addComment( board.Id, testCard.Id, user.Id, "Adding a test comment." ).then( res => {
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "addCommentByExternalId() should add a comment without error", ( done ) => {
+		it( "addCommentByExternalId() should add a comment without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.addCommentByExternalId( board.Id, testCard.ExternalCardID, user.Id, "Adding a test comment by external id." ).then( ( res ) => {
+			return client.addCommentByExternalId( board.Id, testCard.ExternalCardID, user.Id, "Adding a test comment by external id." ).then( res => {
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should get comments without error", ( done ) => {
+		it( "should get comments without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getComments( board.Id, testCard.Id ).then( ( res ) => {
+			return client.getComments( board.Id, testCard.Id ).then( res => {
 				res.length.should.equal( 2 );
 				res[ 0 ].Text.indexOf( "Adding a test comment" ).should.equal( 0 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should get card history without error", ( done ) => {
+		it( "should get card history without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getCardHistory( board.Id, testCard.Id ).then( ( res ) => {
+			return client.getCardHistory( board.Id, testCard.Id ).then( res => {
 				res.length.should.be.above( 0 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should delete test card without error", ( done ) => {
+		it( "should delete test card without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.deleteCard( board.Id, testCard.Id ).then( ( res ) => {
+			return client.deleteCard( board.Id, testCard.Id ).then( res => {
 				res.ReplyCode.should.equal( 203 );
 				testCard = null;
 				testCardId = 0;
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should delete multiple cards without error", ( done ) => {
+		it( "should delete multiple cards without error", done => {
 			// Get the latest version of the test board
 			return client.getBoard( board.Id ).then( b => {
 				should.exist( b );
-				let lane = _.find( b.Lanes, {
+				const lane = _.find( b.Lanes, {
 					IsDefaultDropLane: true
 				} );
 
@@ -899,7 +899,7 @@ describe( "LeanKitClient", function() {
 				lane.Cards.length.should.be.above( 1 );
 
 				// Filter out cards that do no start with "AddCards"
-				let cards = _.remove( lane.Cards, ( card ) => {
+				const cards = _.remove( lane.Cards, card => {
 					return card.Title ? card.Title.indexOf( "AddCards" ) === 0 : false;
 				} );
 
@@ -925,10 +925,10 @@ describe( "LeanKitClient", function() {
 
 		before( function() {
 			fs.writeFile( "./test/testfile.txt", "test file" );
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				return makeTestCard( res.board, res.boardIdentifiers );
-			} ).then( ( card ) => {
+			} ).then( card => {
 				testCard = card;
 				testCardId = card.Id;
 			} );
@@ -942,9 +942,9 @@ describe( "LeanKitClient", function() {
 			}
 		} );
 
-		it( "should add attachment without error", ( done ) => {
+		it( "should add attachment without error", done => {
 			testCard.Id.should.be.above( 0 );
-			let file = fs.createReadStream( "./test/testfile.txt" );
+			const file = fs.createReadStream( "./test/testfile.txt" );
 			client.addAttachment( board.Id, testCard.Id, "Test Attachment", file, ( err, res ) => {
 				if ( err ) {
 					console.log( "err:", err );
@@ -957,7 +957,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get attachments without error", ( done ) => {
+		it( "should get attachments without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getAttachments( board.Id, testCard.Id, ( err, res ) => {
 				if ( err ) {
@@ -974,7 +974,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get attachment by ID without error", ( done ) => {
+		it( "should get attachment by ID without error", done => {
 			testCard.Id.should.be.above( 0 );
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
@@ -988,7 +988,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should get attachment count without error", ( done ) => {
+		it( "should get attachment count without error", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getAttachmentCount( board.Id, testCard.Id, ( err, res ) => {
 				should.not.exist( err );
@@ -999,10 +999,10 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should download attachment without error", ( done ) => {
+		it( "should download attachment without error", done => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			let fileName = "./test/download.txt";
+			const fileName = "./test/download.txt";
 			client.downloadAttachment( board.Id, attachment.Id, fileName, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -1015,11 +1015,11 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should download attachment to stream without error", ( done ) => {
+		it( "should download attachment to stream without error", done => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			let fileName = "./test/download.txt";
-			let file = fs.createWriteStream( fileName );
+			const fileName = "./test/download.txt";
+			const file = fs.createWriteStream( fileName );
 			client.downloadAttachment( board.Id, attachment.Id, file, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -1032,7 +1032,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should delete attachment without error", ( done ) => {
+		it( "should delete attachment without error", done => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
 			client.deleteAttachment( board.Id, testCard.Id, attachment.Id, ( err, res ) => {
@@ -1053,10 +1053,10 @@ describe( "LeanKitClient", function() {
 
 		before( function() {
 			fs.writeFile( "./test/testfile.txt", "test file" );
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				return makeTestCard( res.board, res.boardIdentifiers );
-			} ).then( ( card ) => {
+			} ).then( card => {
 				testCard = card;
 				testCardId = card.Id;
 			} );
@@ -1070,55 +1070,55 @@ describe( "LeanKitClient", function() {
 			}
 		} );
 
-		it( "should add attachment without error", ( done ) => {
+		it( "should add attachment without error", done => {
 			testCard.Id.should.be.above( 0 );
-			let file = fs.createReadStream( "./test/testfile.txt" );
-			return client.addAttachment( board.Id, testCard.Id, "Test Attachment", file ).then( ( res ) => {
+			const file = fs.createReadStream( "./test/testfile.txt" );
+			return client.addAttachment( board.Id, testCard.Id, "Test Attachment", file ).then( res => {
 				should.exist( res );
 				res.should.have.property( "ReplyCode" );
 				res.ReplyCode.should.equal( 202 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should get attachments without error", ( done ) => {
+		it( "should get attachments without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getAttachments( board.Id, testCard.Id ).then( ( res ) => {
+			return client.getAttachments( board.Id, testCard.Id ).then( res => {
 				should.exist( res );
 				res.should.be.instanceOf( Array );
 				res.length.should.be.above( 0 );
 				res[ 0 ].should.have.property( "FileName" );
 				res[ 0 ].should.have.property( "Description" );
 				attachment = res[ 0 ];
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should get attachment by ID without error", ( done ) => {
+		it( "should get attachment by ID without error", done => {
 			testCard.Id.should.be.above( 0 );
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			return client.getAttachment( board.Id, testCard.Id, attachment.Id ).then( ( res ) => {
+			return client.getAttachment( board.Id, testCard.Id, attachment.Id ).then( res => {
 				should.exist( res );
 				res.should.have.property( "Id" );
 				res.should.have.property( "FileName" );
 				res.should.have.property( "Description" );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "should get attachment count without error", ( done ) => {
+		it( "should get attachment count without error", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getAttachmentCount( board.Id, testCard.Id ).then( ( res ) => {
+			return client.getAttachmentCount( board.Id, testCard.Id ).then( res => {
 				should.exist( res );
 				res.should.be.above( 0 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -1127,8 +1127,8 @@ describe( "LeanKitClient", function() {
 		it( "should download attachment without error", () => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			let fileName = "./test/download.txt";
-			return client.downloadAttachment( board.Id, attachment.Id, fileName ).then( ( res ) => {
+			const fileName = "./test/download.txt";
+			return client.downloadAttachment( board.Id, attachment.Id, fileName ).then( res => {
 				should.exist( res );
 				const text = fs.readFileSync( fileName, "utf8" );
 				should.exist( text );
@@ -1139,9 +1139,9 @@ describe( "LeanKitClient", function() {
 		it( "should download attachment to stream without error", () => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			let fileName = "./test/download.txt";
-			let file = fs.createWriteStream( fileName );
-			return client.downloadAttachment( board.Id, attachment.Id, file ).then( ( res ) => {
+			const fileName = "./test/download.txt";
+			const file = fs.createWriteStream( fileName );
+			return client.downloadAttachment( board.Id, attachment.Id, file ).then( res => {
 				should.exist( res );
 				const text = fs.readFileSync( fileName, "utf8" );
 				should.exist( text );
@@ -1149,14 +1149,14 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "should delete attachment without error", ( done ) => {
+		it( "should delete attachment without error", done => {
 			should.exist( attachment );
 			attachment.should.have.property( "Id" );
-			return client.deleteAttachment( board.Id, testCard.Id, attachment.Id ).then( ( res ) => {
+			return client.deleteAttachment( board.Id, testCard.Id, attachment.Id ).then( res => {
 				should.exist( res );
 				res.should.have.property( "ReplyCode" );
 				res.ReplyCode.should.equal( 203 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -1171,10 +1171,10 @@ describe( "LeanKitClient", function() {
 		let taskCard = null;
 
 		before( function() {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				return makeTestCard( res.board, res.boardIdentifiers );
-			} ).then( ( card ) => {
+			} ).then( card => {
 				testCard = card;
 				testCardId = card.Id;
 			} );
@@ -1186,10 +1186,10 @@ describe( "LeanKitClient", function() {
 			}
 		} );
 
-		it( "addTask() should add a task to a card taskboard", ( done ) => {
+		it( "addTask() should add a task to a card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
 			// Get the default task card type
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefaultTaskType: true
 			} );
 			cardType.Id.should.be.above( 0 );
@@ -1201,7 +1201,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "getTaskboard() should get the card taskboard", ( done ) => {
+		it( "getTaskboard() should get the card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getTaskboard( board.Id, testCard.Id, ( err, res ) => {
 				taskBoard = res;
@@ -1213,7 +1213,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "updateTask() should update a task on a card taskboard", ( done ) => {
+		it( "updateTask() should update a task on a card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
 			taskCard.Title = "Updated task 1";
 
@@ -1223,19 +1223,19 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "moveTask() should move a task on a card taskboard", ( done ) => {
+		it( "moveTask() should move a task on a card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
-			let lane = _.find( taskBoard.Lanes, {
+			const lane = _.find( taskBoard.Lanes, {
 				Index: 1
 			} );
-			let position = 0;
+			const position = 0;
 			client.moveTask( board.Id, testCard.Id, taskCard.Id, lane.Id, position, ( err, res ) => {
 				res.ReplyCode.should.equal( 202 );
 				done();
 			} );
 		} );
 
-		it( "getTaskBoardUpdates() should get the latest taskboard", ( done ) => {
+		it( "getTaskBoardUpdates() should get the latest taskboard", done => {
 			testCard.Id.should.be.above( 0 );
 			client.getTaskBoardUpdates( board.Id, testCard.Id, 0, ( err, res ) => {
 				// console.log(err);
@@ -1250,7 +1250,7 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "deleteTask() should delete a task on a card taskboard", ( done ) => {
+		it( "deleteTask() should delete a task on a card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
 			client.deleteTask( board.Id, testCard.Id, taskCard.Id, ( err, res ) => {
 				res.ReplyCode.should.equal( 203 );
@@ -1267,10 +1267,10 @@ describe( "LeanKitClient", function() {
 		let taskCard = null;
 
 		before( function() {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 				return makeTestCard( res.board, res.boardIdentifiers );
-			} ).then( ( card ) => {
+			} ).then( card => {
 				testCard = card;
 				testCardId = card.Id;
 			} );
@@ -1285,7 +1285,7 @@ describe( "LeanKitClient", function() {
 		it( "addTask() should add a task to a card taskboard", () => {
 			testCard.Id.should.be.above( 0 );
 			// Get the default task card type
-			let cardType = _.find( board.CardTypes, {
+			const cardType = _.find( board.CardTypes, {
 				IsDefaultTaskType: true
 			} );
 			cardType.Id.should.be.above( 0 );
@@ -1295,14 +1295,14 @@ describe( "LeanKitClient", function() {
 				.should.eventually.have.property( "CardId" ).that.is.above( 0 );
 		} );
 
-		it( "getTaskboard() should get the card taskboard", ( done ) => {
+		it( "getTaskboard() should get the card taskboard", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getTaskboard( board.Id, testCard.Id ).then( ( res ) => {
+			return client.getTaskboard( board.Id, testCard.Id ).then( res => {
 				taskBoard = res;
 				taskBoard.Id.should.be.above( 0 );
 				taskBoard.Lanes.length.should.equal( 3 );
 				taskCard = taskBoard.Lanes[ 0 ].Cards[ 0 ];
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -1318,23 +1318,23 @@ describe( "LeanKitClient", function() {
 
 		it( "moveTask() should move a task on a card taskboard", () => {
 			testCard.Id.should.be.above( 0 );
-			let lane = _.find( taskBoard.Lanes, {
+			const lane = _.find( taskBoard.Lanes, {
 				Index: 1
 			} );
-			let position = 0;
+			const position = 0;
 			return client.moveTask( board.Id, testCard.Id, taskCard.Id, lane.Id, position )
 				.should.eventually.have.property( "ReplyCode" ).that.equals( 202 );
 		} );
 
-		it( "getTaskBoardUpdates() should get the latest taskboard", ( done ) => {
+		it( "getTaskBoardUpdates() should get the latest taskboard", done => {
 			testCard.Id.should.be.above( 0 );
-			return client.getTaskBoardUpdates( board.Id, testCard.Id, 0 ).then( ( res ) => {
+			return client.getTaskBoardUpdates( board.Id, testCard.Id, 0 ).then( res => {
 				should.exist( res );
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
 				res.Events.length.should.be.above( 0 );
 				res.CurrentBoardVersion.should.be.above( 1 );
-			}, ( err ) => {
+			}, err => {
 				console.error( err );
 				should.not.exist( err );
 			} ).should.notify( done );
@@ -1351,13 +1351,13 @@ describe( "LeanKitClient", function() {
 		let board = null;
 
 		before( () => {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 			} );
 		} );
 
-		it( "searchCards() should get cards without error", ( done ) => {
-			let searchOptions = {
+		it( "searchCards() should get cards without error", done => {
+			const searchOptions = {
 				IncludeArchiveOnly: false,
 				IncludeBacklogOnly: false,
 				IncludeComments: false,
@@ -1385,7 +1385,7 @@ describe( "LeanKitClient", function() {
 		} );
 
 		it( "promise version of searchCards() should get cards without error", () => {
-			let searchOptions = {
+			const searchOptions = {
 				IncludeArchiveOnly: false,
 				IncludeBacklogOnly: false,
 				IncludeComments: false,
@@ -1401,7 +1401,7 @@ describe( "LeanKitClient", function() {
 				OrderBy: "CreatedOn",
 				SortOrder: 0
 			};
-			return client.searchCards( board.Id, searchOptions ).then( ( res ) => {
+			return client.searchCards( board.Id, searchOptions ).then( res => {
 				should.exist( res );
 				res.should.have.property( "Results" );
 				res.should.have.property( "TotalResults" );
@@ -1415,12 +1415,12 @@ describe( "LeanKitClient", function() {
 		let board = null;
 
 		before( () => {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 			} );
 		} );
 
-		it( "getNewCards() should get cards without error", ( done ) => {
+		it( "getNewCards() should get cards without error", done => {
 			client.getNewCards( board.Id, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -1434,8 +1434,8 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "getNewerIfExists() should return a newer board", ( done ) => {
-			var version = board.Version - 1;
+		it( "getNewerIfExists() should return a newer board", done => {
+			const version = board.Version - 1;
 			client.getNewerIfExists( board.Id, version, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -1444,8 +1444,8 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "getBoardHistorySince() should return newer cards", ( done ) => {
-			var version = board.Version - 1;
+		it( "getBoardHistorySince() should return newer cards", done => {
+			const version = board.Version - 1;
 			client.getBoardHistorySince( board.Id, version, ( err, res ) => {
 				should.not.exist( err );
 				should.exist( res );
@@ -1457,8 +1457,8 @@ describe( "LeanKitClient", function() {
 			} );
 		} );
 
-		it( "getBoardUpdates() should return all recent updates", ( done ) => {
-			var version = board.Version - 1;
+		it( "getBoardUpdates() should return all recent updates", done => {
+			const version = board.Version - 1;
 			client.getBoardUpdates( board.Id, version, ( err, res ) => {
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
@@ -1472,13 +1472,13 @@ describe( "LeanKitClient", function() {
 		let board = null;
 
 		before( () => {
-			return getTestBoard().then( ( res ) => {
+			return getTestBoard().then( res => {
 				board = res.board;
 			} );
 		} );
 
-		it( "getNewCards() should get cards without error", ( done ) => {
-			return client.getNewCards( board.Id ).then( ( res ) => {
+		it( "getNewCards() should get cards without error", done => {
+			return client.getNewCards( board.Id ).then( res => {
 				should.exist( res );
 				res.should.be.instanceOf( Array );
 				if ( res.length > 0 ) {
@@ -1486,38 +1486,38 @@ describe( "LeanKitClient", function() {
 					res[ 0 ].should.have.property( "LaneId" );
 					res[ 0 ].should.have.property( "TypeName" );
 				}
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
 		it( "getNewerIfExists() should return a newer board", () => {
-			var version = board.Version - 1;
+			const version = board.Version - 1;
 			return client.getNewerIfExists( board.Id, version )
 				.should.eventually.have.property( "Version" )
 				.that.is.above( version );
 		} );
 
-		it( "getBoardHistorySince() should return newer cards", ( done ) => {
-			var version = board.Version - 1;
-			client.getBoardHistorySince( board.Id, version ).then( ( res ) => {
+		it( "getBoardHistorySince() should return newer cards", done => {
+			const version = board.Version - 1;
+			client.getBoardHistorySince( board.Id, version ).then( res => {
 				should.exist( res );
 				res.should.be.instanceOf( Array );
 				res.length.should.be.above( 0 );
 				res[ 0 ].should.have.property( "CardId" );
 				res[ 0 ].should.have.property( "EventType" );
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
 
-		it( "getBoardUpdates() should return all recent updates", ( done ) => {
-			var version = board.Version - 1;
-			client.getBoardUpdates( board.Id, version ).then( ( res ) => {
+		it( "getBoardUpdates() should return all recent updates", done => {
+			const version = board.Version - 1;
+			client.getBoardUpdates( board.Id, version ).then( res => {
 				res.HasUpdates.should.be.true;
 				res.AffectedLanes.length.should.be.above( 0 );
 				res.Events.length.should.be.above( 0 );
-			}, ( err ) => {
+			}, err => {
 				should.not.exist( err );
 			} ).should.notify( done );
 		} );
@@ -1525,9 +1525,9 @@ describe( "LeanKitClient", function() {
 
 	describe( "Errors", () => {
 		beforeEach( () => {
-			let url = accountName.startsWith( "http" ) ?
+			const url = accountName.startsWith( "http" ) ?
 				accountName :
-				"https://" + accountName + ".leankit.com";
+				`https://${ accountName }.leankit.com`;
 
 			nock( url )
 				.get( "/kanban/api/boards" )
@@ -1538,7 +1538,7 @@ describe( "LeanKitClient", function() {
 						Headers: {}
 					} ],
 					ReplyCode: 503,
-				ReplyText: "Some useful message here." } );
+					ReplyText: "Some useful message here." } );
 			nock( url )
 				.get( "/api/user/getcurrentusersettings/0" )
 				.reply( 401, "<html><head><title>401 Authorization Required</title></head><body><h1>Authorization Required</h1><p>This server could not verify that you are authorized to access the document requested.  Either you supplied the wrong credentials (e.g., bad password), or your browser doesn't understand how to supply the credentials required.</p></body></html>" );
@@ -1558,10 +1558,10 @@ describe( "LeanKitClient", function() {
 
 		it( "should handle promise rejection", () => {
 			return client.getBoards()
-				.then( ( res ) => {
+				.then( res => {
 					"this".should.not.equal( "this" );
 					should.not.exist( res );
-				}, ( err ) => {
+				}, err => {
 					should.exist( err );
 					err.should.have.property( "replyCode" ).that.is.equal( 503 );
 				} );
@@ -1569,10 +1569,10 @@ describe( "LeanKitClient", function() {
 
 		it( "should handle another promise rejection", () => {
 			return client.getBoards()
-				.then( ( res ) => {
+				.then( res => {
 					"this".should.not.equal( "this" );
 					should.not.exist( res );
-				}, ( err ) => {
+				}, err => {
 					should.exist( err );
 					err.should.have.property( "replyCode" ).that.is.equal( 503 );
 				} );
@@ -1583,17 +1583,17 @@ describe( "LeanKitClient", function() {
 			if ( !proxy ) {
 				badClient = new LeanKitClient( accountName, email, "totallyboguspassword" );
 			} else {
-				process.env[ "NODE_TLS_REJECT_UNAUTHORIZED" ] = "0";
+				process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 				badClient = new LeanKitClient( accountName, email, "totallyboguspassword", {
-					proxy: proxy
+					proxy
 				} );
 			}
 			return badClient.getCurrentUserProfile()
-				.then( ( res ) => {
+				.then( res => {
 					"this".should.not.equal( "this" );
 					should.not.exist( res );
 				} )
-				.catch( ( err ) => {
+				.catch( err => {
 					should.exist( err );
 					err.should.have.property( "replyCode" ).that.is.equal( 401 );
 				} );
@@ -1602,45 +1602,45 @@ describe( "LeanKitClient", function() {
 
 	describe( "Client", () => {
 		it( "should let you bypass user/pass in favor of headers", () => {
-			let cred = `${email}:${pwd}`;
-			let basicAuth = new Buffer( cred ).toString( "base64" );
-			let opts = {
+			const cred = `${ email }:${ pwd }`;
+			const basicAuth = new Buffer( cred ).toString( "base64" );
+			const opts = {
 				headers: {
-					authorization: `Basic ${basicAuth}`
+					authorization: `Basic ${ basicAuth }`
 				}
 			};
 
-			let client = new LeanKitClient( accountName, opts );
+			const client = new LeanKitClient( accountName, opts );
 
-			return client.getBoards().then( ( res ) => {
+			return client.getBoards().then( res => {
 				should.exist( res );
 				boards = res;
 				boards.length.should.be.above( 0 );
-			} ).catch( ( err ) => {
+			} ).catch( err => {
 				should.not.exist( err );
 			} );
 		} );
 
 		it( "builds the correct url from a given account name", () => {
-			let client = new LeanKitClient( "account", "me@mycompany.com", "test" );
+			const client = new LeanKitClient( "account", "me@mycompany.com", "test" );
 			client._options.baseUrl.should.equal( "https://account.leankit.com/" );
 		} );
 
 		it( "builds the correct url from a given account domain name", () => {
-			let client = new LeanKitClient( "accountname.leankit.com", "me@mycompany.com", "test" );
+			const client = new LeanKitClient( "accountname.leankit.com", "me@mycompany.com", "test" );
 			client._options.baseUrl.should.equal( "https://accountname.leankit.com/" );
 		} );
 
 		it( "builds the correct url from a given url", () => {
-			let client = new LeanKitClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
+			const client = new LeanKitClient( "https://mycompany.leankit.com", "me@mycompany.com", "test" );
 			client._options.baseUrl.should.equal( "https://mycompany.leankit.com/" );
 		} );
 	} );
 
 	describe( "User Profile", () => {
-		it( "retrieves the current user's profile", ()=> {
+		it( "retrieves the current user's profile", () => {
 			return client.getCurrentUserProfile()
-				.then( ( user ) => {
+				.then( user => {
 					should.exist( user );
 					user.should.have.property( "Id" );
 					user.should.have.property( "FirstName" );
