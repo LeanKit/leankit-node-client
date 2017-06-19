@@ -27,7 +27,29 @@ const getUserAgent = () => {
 	return "leankit-node-client/2.0.0";
 };
 
+
+const getPropertyValue = ( obj, prop, def = null ) => {
+	for ( const k in obj ) {
+		if ( k.toLowerCase() === prop.toLowerCase() ) {
+			return obj[ k ];
+		}
+	}
+	return def;
+};
+
+const removeProperties = ( obj, props ) => {
+	for ( let i = 0; i < props.length; i++ ) {
+		for ( const k in obj ) {
+			if ( k.toLowerCase() === props[ i ].toLowerCase() ) {
+				delete obj[ k ];
+			}
+		}
+	}
+};
+
 module.exports = {
 	buildUrl,
-	getUserAgent
+	getUserAgent,
+	getPropertyValue,
+	removeProperties
 };

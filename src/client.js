@@ -1,9 +1,22 @@
 /* eslint-disable max-lines */
 const axios = require( "axios" );
 const utils = require( "./utils" );
+const apiFactory = require( "./api" );
 
-const Client = ( { account, email, password, proxy } ) => {
-	const userAgent = utils.getUserAgent();
+const buildDefaultConfig = ( account, email, password, config ) => {
+	config = config || { headers: {} };
+	if ( !config.headers ) {
+		config.headers = {};
+	}
+	const userAgent = utils.getPropertyValue( config.headers, "User-Agent", utils.getUserAgent() );
+	utils.removeProperties( config.headers, [ "User-Agent", "Content-Type", "Accept" ] );
+	const proxy = config.proxy || null;
+	const defaultHeaders = {
+		Accept: "application/json",
+		"Content-Type": "application/json",
+		"User-Agent": userAgent
+	};
+	const headers = Object.assign( {}, config.headers, defaultHeaders );
 	const defaults = {
 		auth: {
 			username: email,
@@ -11,13 +24,17 @@ const Client = ( { account, email, password, proxy } ) => {
 		},
 		responseType: "json",
 		baseURL: utils.buildUrl( account ),
-		proxy,
-		headers: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-			"User-Agent": userAgent
-		}
+		headers
 	};
+
+	if ( proxy ) {
+		defaults.proxy = proxy;
+	}
+	return defaults;
+};
+
+const Client = ( { account, email, password, config } ) => {
+	const defaults = buildDefaultConfig( account, email, password, config );
 
 	const request = options => {
 		Object.assign( options, defaults );
@@ -40,85 +57,9 @@ const Client = ( { account, email, password, proxy } ) => {
 			} );
 	};
 
-	const api = {
-		account: {},
-		auth: {},
-		board: {
-			customFields: {}
-		},
-		card: {},
-		template: {},
-		user: {},
-		userBoards: {},
-		task: {},
-		organization: {},
-		devices: {}
-	};
+	const api = {};
 
-	// Account
-	api.account.get = () => {
-		return request( { url: "/io/account", method: "get" } );
-	};
-	api.account.me = api.account.get;
-
-	// Auth
-	api.auth.listTokens = () => {
-		return request( { url: "/io/auth/token", method: "get" } );
-	};
-
-	api.auth.createToken = description => {
-		return request( {
-			url: "/io/auth/token",
-			method: "post",
-			data: { description }
-		} );
-	};
-
-	api.auth.revokeToken = id => {
-		return request( {
-			url: `/io/auth/token/${ id }`,
-			method: "delete"
-		} );
-	};
-
-	// Board
-	api.board.list = ( params = {} ) => {
-		return request( {
-			url: "/io/board",
-			method: "get",
-			params
-		} );
-	};
-
-	api.board.get = boardId => {
-		return request( {
-			url: `/io/board/${ boardId }`,
-			method: "get"
-		} );
-	};
-
-	api.board.customFields.list = boardId => {
-		return request( {
-			url: `/io/board/${ boardId }/customfield`,
-			method: "get"
-		} );
-	};
-
-	api.board.customFields.update = ( boardId, operations ) => {
-		return request( {
-			url: `/io/board/${ boardId }/customfield`,
-			method: "patch",
-			data: operations
-		} );
-	};
-
-	api.board.create = boardCreateRequest => {
-		return request( {
-			url: "/io/board",
-			method: "post",
-			data: { boardCreateRequest }
-		} );
-	};
+	apiFactory( api, request );
 
 	return api;
 };
