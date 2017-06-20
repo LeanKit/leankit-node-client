@@ -31,9 +31,8 @@
   "engines": {
     "node": "*"
   },
-  "main": "./lib/client.js",
+  "main": "index.js",
   "dependencies": {
-    "axios": "^0.16.2",
     "change-case": "^3.0.1",
     "request": "^2.81.0",
     "when": "^3.7.8"

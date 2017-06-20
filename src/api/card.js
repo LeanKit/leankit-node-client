@@ -1,5 +1,7 @@
 module.exports = ( api, request ) => {
-	api.card = { attachment: {}, comment: {} };
+	if ( !api.card ) {
+		api.card = { attachment: {}, comment: {} };
+	}
 	api.card.list = ( params = {} ) => {
 		return request( {
 			url: "/io/card",
