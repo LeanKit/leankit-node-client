@@ -4,7 +4,7 @@ module.exports = ( api, request ) => {
 		return request( {
 			url: "/io/board",
 			method: "get",
-			params
+			qs: params
 		} );
 	};
 

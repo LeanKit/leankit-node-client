@@ -6,7 +6,7 @@ module.exports = ( api, request ) => {
 		return request( {
 			url: "/io/card",
 			method: "get",
-			params
+			qs: params
 		} );
 	};
 
