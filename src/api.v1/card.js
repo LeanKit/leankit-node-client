@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 module.exports = ( api, request ) => {
 	const defaultWipOverrideReason = "WIP Override performed by external system";
 	api.card = {};
@@ -79,6 +80,38 @@ module.exports = ( api, request ) => {
 			url: `board/${ boardId }/updatecards?wipoverridecomment=${ encodeURIComponent( wipOverrideReason ) }`,
 			method: "POST",
 			data: cardsArray
+		} );
+	};
+
+	api.card.history = ( boardId, cardId ) => {
+		return request( { url: `card/history/${ boardId }/${ cardId }` } );
+	};
+
+	api.card.search = ( boardId, searchRequest ) => {
+		return request( {
+			url: `board/${ boardId }/searchcards`,
+			method: "POST",
+			data: searchRequest
+		} );
+	};
+
+	api.card.list = {};
+	api.card.list.recent = ( boardId, callback ) => {
+		return request( { url: `board/${ boardId }/listnewcards` } );
+	};
+
+	api.card.destroy = ( boardId, cardId ) => {
+		return request( {
+			url: `board/${ boardId }/deletecard/${ cardId }`,
+			method: "POST"
+		} );
+	};
+
+	api.card.destroy.multiple = ( boardId, cardIdArray ) => {
+		return request( {
+			url: `board/${ boardId }/deletecards`,
+			method: "POST",
+			data: cardIdArray
 		} );
 	};
 };
