@@ -29,7 +29,7 @@
     }
   ],
   "engines": {
-    "node": "*"
+    "node": ">=4.0"
   },
   "main": "index.js",
   "dependencies": {
