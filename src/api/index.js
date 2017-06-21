@@ -7,8 +7,9 @@ const cardComment = require( "./card.comment" );
 const task = require( "./task" );
 const template = require( "./template" );
 const user = require( "./user" );
+const reporting = require( "./reporting" );
 
-module.exports = ( api, request ) => {
+module.exports = ( api, request, { accountName, email, password } ) => {
 	account( api, request );
 	auth( api, request );
 	board( api, request );
@@ -18,4 +19,5 @@ module.exports = ( api, request ) => {
 	task( api, request );
 	template( api, request );
 	user( api, request );
+	reporting( api, request, { accountName, email, password } );
 };
