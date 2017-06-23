@@ -38,6 +38,28 @@ const buildDefaultConfig = ( account, email, password, config ) => {
 const Client = ( { account, email, password, config } ) => {
 	const defaults = buildDefaultConfig( account, email, password, config );
 
+	const streamResponse = ( request, cfg, stream ) => {
+		return new Promise( ( resolve, reject ) => {
+			const response = {};
+			request( cfg )
+				.on( "error", err => {
+					return reject( err );
+				} )
+				.on( "response", res => {
+					response.status = res.statusCode;
+					response.statusText = res.statusMessage;
+					response.data = "";
+				} )
+				.on( "end", () => {
+					if ( response.status < 200 || response.status >= 300 ) { // eslint-disable-line no-magic-numbers
+						return reject( response );
+					}
+					return resolve( response );
+				} )
+				.pipe( stream );
+		} );
+	};
+
 	const request = ( options, stream = null ) => {
 		if ( options.headers ) {
 			options.headers.Accept = defaults.headers.Accept;
@@ -54,25 +76,7 @@ const Client = ( { account, email, password, config } ) => {
 		}
 
 		if ( stream ) {
-			return new Promise( ( resolve, reject ) => {
-				const response = {};
-				req( cfg )
-					.on( "error", err => {
-						return reject( err );
-					} )
-					.on( "response", res => {
-						response.status = res.statusCode;
-						response.statusText = res.statusMessage;
-						response.data = "";
-					} )
-					.on( "end", () => {
-						if ( response.status < 200 || response.status >= 300 ) { // eslint-disable-line no-magic-numbers
-							return reject( response );
-						}
-						return resolve( response );
-					} )
-					.pipe( stream );
-			} );
+			return streamResponse( req, cfg, stream );
 		}
 
 		return new Promise( ( resolve, reject ) => {
@@ -157,7 +161,7 @@ const Client = ( { account, email, password, config } ) => {
 		return resolve( parsed );
 	};
 
-	const legacyRequest = options => {
+	const legacyRequest = ( options, stream = null ) => {
 		options.url = utils.checkLegacyPath( options.url );
 		if ( options.headers ) {
 			options.headers.Accept = defaults.headers.Accept;
@@ -171,6 +175,9 @@ const Client = ( { account, email, password, config } ) => {
 				cfg.body = cfg.data;
 			}
 			delete cfg.data;
+		}
+		if ( stream ) {
+			return streamResponse( req, cfg, stream );
 		}
 		return new Promise( ( resolve, reject ) => {
 			req( cfg, ( err, res, body ) => {

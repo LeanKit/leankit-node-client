@@ -24,11 +24,11 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.card.attachment.content = ( cardId, attachmentId ) => {
+	api.card.attachment.download = ( cardId, attachmentId, stream ) => {
 		return request( {
 			url: `/io/card/${ cardId }/attachment/${ attachmentId }/content`,
 			method: "GET"
-		} );
+		}, stream );
 	};
 
 	api.card.attachment.destroy = ( cardId, attachmentId ) => {

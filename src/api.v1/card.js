@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 module.exports = ( api, request ) => {
 	const defaultWipOverrideReason = "WIP Override performed by external system";
+	const defaultPosition = 9999;
 	api.card = {};
 
 	api.card.get = ( boardId, cardId ) => {
@@ -12,7 +13,7 @@ module.exports = ( api, request ) => {
 		return request( { url: `board/${ boardId }/getcardbyexternalid/${ encodeURIComponent( externalCardId ) }` } );
 	};
 
-	api.card.create = ( boardId, laneId, position, cardObject, wipOverrideReason = defaultWipOverrideReason ) => {
+	api.card.create = ( boardId, cardObject, laneId = 0, position = defaultPosition, wipOverrideReason = defaultWipOverrideReason ) => {
 		if ( !cardObject.UserWipOverrideComment ) {
 			cardObject.UserWipOverrideComment = wipOverrideReason;
 		}
@@ -31,7 +32,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.card.move = ( boardId, cardId, toLaneId, position, wipOverrideReason = defaultWipOverrideReason ) => {
+	api.card.move = ( boardId, cardId, toLaneId, position = defaultPosition, wipOverrideReason = defaultWipOverrideReason ) => {
 		return request( {
 			url: `board/${ boardId }/movecardwithwipoverride/${ cardId }/lane/${ toLaneId }/position/${ position }`,
 			method: "POST",
@@ -40,7 +41,7 @@ module.exports = ( api, request ) => {
 	};
 
 	api.card.move.by = {};
-	api.card.move.by.externalCardId = ( boardId, externalCardId, toLaneId, position, wipOverrideReason = defaultWipOverrideReason ) => {
+	api.card.move.by.externalCardId = ( boardId, externalCardId, toLaneId, position = defaultPosition, wipOverrideReason = defaultWipOverrideReason ) => {
 		return request( {
 			url: `board/${ boardId }/movecardbyexternalid/${ encodeURIComponent( externalCardId ) }/lane/${ toLaneId }/position/${ position }`,
 			method: "POST",
