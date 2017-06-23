@@ -2,7 +2,6 @@ const chai = require( "chai" );
 const should = chai.should();
 const chaiAsPromised = require( "chai-as-promised" );
 chai.use( chaiAsPromised );
-const when = require( "when" );
 
 const TEST_TIMEOUT = 20000;
 const fs = require( "fs" );
@@ -41,7 +40,7 @@ const cardTemplate = {
 // fiddler proxy: "http://127.0.0.1:8888"
 
 const getTestBoard = () => {
-	return when.promise( ( resolve, reject ) => {
+	return new Promise( ( resolve, reject ) => {
 		if ( !board ) {
 			client.getBoards().then( res => {
 				boards = res;
@@ -64,7 +63,7 @@ const getTestBoard = () => {
 };
 
 const makeTestCard = ( board, boardIdentifiers ) => {
-	return when.promise( ( resolve, reject ) => {
+	return new Promise( ( resolve, reject ) => {
 		const card = {
 			Id: 0,
 			Title: "Mocha Test Card",
