@@ -42,11 +42,4 @@ module.exports = ( api, request ) => {
 			method: "delete"
 		} );
 	};
-
-	api.card.comment.list = cardId => {
-		return request( {
-			url: `/io/card/${ cardId }/comment`,
-			method: "get"
-		} );
-	};
 };

@@ -26,7 +26,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.card.comment.destroy = ( cardId, commentId, text ) => {
+	api.card.comment.destroy = ( cardId, commentId ) => {
 		return request( {
 			url: `/io/card/${ cardId }/comment/${ commentId }`,
 			method: "delete"
