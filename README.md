@@ -151,6 +151,62 @@ For reporting API export configuration options, please refer [Reporting API docu
 |`.user.boards.recent()`|`GET /io/user/me/board/recent`|Get a list of recently accessed boards for the currently authenticated user.|
 
 
+### Legacy API
+
+#### Boards
+
+|Method|API endpoint|Description|
+|:---|:---|:---|
+|`.v1.board.list()`|`GET /kanban/api/boards`||
+|`.v1.board.get( boardId )`|`GET /kanban/api/boards/$boardId`||
+|`.v1.board.identifiers( boardId )`|`GET /kanban/api/board/$boardId/GetBoardIdentifiers`||
+|`.v1.board.backlog( boardId )`|`GET /kanban/api/board/$boardId/backlog`||
+|`.v1.board.archive( boardId )`|`GET /kanban/api/board/$boardId/archive`||
+|`.v1.board.archive.cards( boardId )`|`GET /kanban/api/board/$boardId/archivecards`||
+|`.v1.board.since.version( boardId, version )`|`GET /kanban/api/board/$boardId/boardversion/$version/GetNewerIfExists`||
+|`.v1.board.since.version.history( boardId, version )`|`GET /kanban/api/board/$boardId/boardversion/$version/GetBoardHistorySince`||
+|`.v1.board.since.version.updates( boardId, version )`|`GET /kanban/api/board/$boardId/boardversion/$version/CheckForUpdates`||
+
+#### Cards
+
+|Method|API endpoint|Description|
+|:---|:---|:---|
+|`.v1.card.get( boardId, cardId )`|`GET /kanban/api/board/$boardId/getcard/$cardId`||
+|`.v1.card.get.by.externalCardId( boardId, externalCardId )`|`GET /kanban/api/board/$boardId/GetCardByExternalId/$externalCardId`||
+|`.v1.card.create( boardId, cardObject [, laneId] [, position] [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/AddCardWithWipOverride/lane/$laneId/position/$position`||
+|`.v1.card.create.multiple( boardId, cardsArray, [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/AddCards`||
+|`.v1.card.move( boardId, cardId, toLaneId, [, position] [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/MoveCardWithWipOverride/$cardId/lane/$toLaneId/position/$position`||
+|`.v1.card.move.by.externalCardId( boardId, externalCardId, toLaneId, [, position] [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/MoveCardByExternalId/$externalCardId/lane/$toLaneId/position/$position`||
+|`.v1.card.move.to.board( cardId, destinationBoardId )`|`POST /kanban/api/card/MoveCardToAnotherBoard/$cardId/$destinationBoardId`||
+|`.v1.card.update( boardId, cardObject [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/UpdateCardWithWipOverride`||
+|`.v1.card.update.fields( { cardFieldsUpdateRequest } )`|`POST /kanban/api/card/update`||
+|`.v1.card.update.multiple( boardId, cardsArray [, wipOverrideComment] )`|`POST /kanban/api/board/$boardId/UpdateCards`||
+|`.v1.card.history( boardId, cardId )`|`GET /kanban/api/card/history/$boardId/$cardId`||
+|`.v1.card.search( boardId, { searchRequest } )`|`POST /kanban/api/board/$boardId/SearchCards`||
+|`.v1.card.list.recent( boardId )`|`GET /kanban/api/board/$boardId/ListNewCards`||
+|`.v1.card.destroy( boardId, cardId )`|`POST /kanban/api/board/$boardId/DeleteCard/$cardId`||
+|`.v1.card.destroy.multiple( boardId, cardIdArray )`|`POST /kanban/api/board/$boardId/DeleteCards`||
+|`.v1.card.attachment.count( boardId, cardId )`|`GET /kanban/api/card/GetAttachmentsCount/$boardId/$cardId`||
+|`.v1.card.attachment.list( boardId, cardId )`|`GET /kanban/api/card/GetAttachments/$boardId/$cardId`||
+|`.v1.card.attachment.get( boardId, cardId, attachmentId )`|`GET /kanban/api/card/GetAttachments/$boardId/$cardId/$attachmentId`||
+|`.v1.card.attachment.create( boardId, cardId, { name, description, file } )`|`POST /kanban/api/card/SaveAttachment/$boardId/$cardId`||
+|`.v1.card.attachment.download( boardId, attachmentId, stream )`|`GET /kanban/api/card/DownloadAttachment/$boardId/$attachmentId `||
+|`.v1.card.attachment.destroy( boardId, cardId, attachmentId )`|`POST /kanban/api/card/DeleteAttachment/$boardId/$cardId/$attachmentId`||
+|`.v1.card.comment.list( boardId, cardId )`|`GET /kanban/api/card/GetComments/$boardId/$cardId`||
+|`.v1.card.comment.create( boardId, cardId, userId, comment )`|`POST /kanban/api/card/SaveComment/$boardId/$cardId`||
+|`.v1.card.comment.create.by.externalId( boardId, externalCardId, userId, comment )`|`POST /kanban/api/card/SaveCommentByExternalId/$boardId/$externalCardId`||
+
+#### Card Tasks
+
+|Method|API endpoint|Description|
+|:---|:---|:---|
+|`.v1.task.board.get( boardId, cardId )`|`GET /kanban/api/v1/board/$boardId/card/$cardId/taskboard`||
+|`.v1.task.board.since.version( boardId, cardId, version )`|`GET /kanban/api/v1/board/$boardId/card/$cardId/tasks/boardversion/$version`||
+|`.v1.task.create( boardId, cardId, taskCardObject [, laneId] [, position] [, wipOverrideReason] )`|`POST /kanban/api/v1/board/$boardId/card/$cardId/tasks/$laneId/position/$position`||
+|`.v1.task.update( boardId, cardId, taskCardObject [, wipOverrideReason] )`|`POST /kanban/api/v1/board/$boardId/card/$cardId/tasks/$taskId`||
+|`.v1.task.move( boardId, cardId, taskId, toLaneId [, position] )`|`POST /kanban/api/v1/board/$boardId/move/card/$cardId/tasks/$taskId/lane/$toLaneId/position/$position`||
+|`.v1.task.destroy( boardId, cardId, taskId )`|`POST /kanban/api/v1/board/$boardId/delete/card/$cardId/tasks/$taskId`||
+
 ## Proxy support
 
 To use the LeanKit Client behind a proxy server, include a `config` object in the authentication with your proxy server address. For example:
