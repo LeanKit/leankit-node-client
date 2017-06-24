@@ -48,7 +48,7 @@
     "lint": "eslint --fix ./src",
     "prepublish": "npm run lint",
     "pretest": "npm run lint",
-    "test": "mocha --reporter spec ./test/*.js",
+    "test": "mocha -r ./spec/setup --reporter spec ./spec/*.spec.js",
     "scratch-tests": "npm run lint && node ./scratch"
   },
   "repository": {
