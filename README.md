@@ -22,35 +22,40 @@ The first step in using the LeanKit client is to create a new client with your L
 ```javascript
 const LeanKitClient = require( "leankit-client" );
 const auth = {
-	account: "account-name",	// change these properties to match your account
-	email: "your@email.com",
-	password: "your-p@ssw0rd"
+    account: "account-name",    // change these properties to match your account
+    email: "your@email.com",
+    password: "your-p@ssw0rd"
 };
+// create a client with the account credentials
 const client = LeanKitClient( auth );
-// get a list of boards
+
+// use the client to get a list of boards
 client.board.list().then( response => {
-	console.log( response.data );
+    console.log( response.data );
 } );
 ```
 
 ### Support for JavaScript Promises, and `async`/`await`
 
-The LeanKit API Client provides a number of functions for retrieving and managing your LeanKit data. Each of these functions return a JavaScript Promises instead of expecting a callback function. Promises provide an easy way to chain commands together.
+The LeanKit API Client provides a number of functions for retrieving and managing your LeanKit data. Each of these functions return a JavaScript Promise instead of expecting a callback function. Promises provide an easy way to chain commands together.
 
 #### Example: getting a board using promises
 
 ```javascript
-// start by getting all the boards
+// start by requesting all the boards
 client.board.list().then( res => {
-	// get the first board's ID
-	const boardId = res.data.boards[ 0 ].id;
-	// retrieve the board
-	return client.board.get( boardId );
+    // get the first board's ID
+    const boardId = res.data.boards[ 0 ].id;
+
+    // request the full board by ID
+    return client.board.get( boardId );
 } ).then( boardRes => {
-	const board = boardRes.data;
-	console.log( board );
+    // response from client.board.get()
+    const board = boardRes.data;
+    console.log( board );
 } ).catch( err => {
-	console.log( "Error:", err );
+    // any errors that occur will be caught here
+    console.log( "Error:", err );
 } );
 ```
 
@@ -62,31 +67,38 @@ Newer versions of the JavaScript language, such as found in Node.js version 8.x 
 const LeanKitClient = require( "leankit-client" );
 
 const getBoardByTitle = async ( client, title ) => {
-	// search boards by title
-	const res = await client.board.list( { search: title } );
-	if ( res.data.length === 0 ) {
-		return { msg: `Cound not find board with the title: ${ title }` };
-	}
-	// get the board ID
-	const boardId = res.data.boards[ 0 ].id;
-	// retrieve the board by ID
-	const boardRes = await client.board.get( boardId );
-	return boardRes.data;
+    try {
+        // search boards by title
+        const res = await client.board.list( { search: title } );
+        if ( res.data.length === 0 ) {
+            return { msg: `Cound not find board with the title: ${ title }` };
+        }
+        // get the board ID
+        const boardId = res.data.boards[ 0 ].id;
+        // retrieve the board by ID
+        const boardRes = await client.board.get( boardId );
+        return boardRes.data;
+    } catch ( err ) {
+        // any errors will be caught here.
+        console.log( "Error:", err );
+        return { msg: err.message };
+    }
 };
 
 const main = async () => {
-	const auth = {
-		account: "account-name",
-		email: "your@email.com",
-		password: "your-p@ssw0rd"
-	};
-	const client = LeanKitClient( auth );
-	const board = await getBoardByTitle( client, "Team Awesome" );
-	console.log( board );
+    const auth = {
+        account: "account-name",
+        email: "your@email.com",
+        password: "your-p@ssw0rd"
+    };
+    const client = LeanKitClient( auth );
+    const board = await getBoardByTitle( client, "Team Awesome" );
+    console.log( board );
 };
 
 main().then( () => {
-	console.log( "done" );
+    // async functions automatically return a Promise
+    console.log( "done" );
 } );
 ```
 
@@ -245,12 +257,12 @@ To use the LeanKit Client behind a proxy server, include a `config` object in th
 ```javascript
 const LeanKitClient = require( "leankit-client" );
 const auth = {
-	account: "account-name",
-	email: "your@email.com",
-	password: "your-p@ssw0rd",
-	config: {
-		proxy: "http://localproxy.com"
-	}
+    account: "account-name",
+    email: "your@email.com",
+    password: "your-p@ssw0rd",
+    config: {
+        proxy: "http://localproxy.com"
+    }
 };
 const client = LeanKitClient( auth );
 ```
