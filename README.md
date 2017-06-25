@@ -1,46 +1,77 @@
-## LeanKit Node Client
+## LeanKit API Client for Node.js
 
-The LeanKit client module for Node.js provides an easy-to-use set of functions designed to simplify the integration of external systems and utilities with your LeanKit account.
+The LeanKit API Client module for Node.js provides an easy-to-use set of functions designed to simplify the integration of external systems and utilities with your LeanKit account.
 
-Note: There is a separate [LeanKit Events](https://github.com/leankit/leankit-node-events) module for subscribing to board events.
+_**Note:** There is a separate [LeanKit Events](https://github.com/leankit/leankit-node-events) module for Node.js used to subscribe and monitor board events, such as when cards are created, updated, or moved._
 
 ### Requirements
 
 * [Node.js](https://nodejs.org) 4.x or higher
 * A [LeanKit](https://leankit.com) account
 
-### Installing the client
+### Installing the API Client
 
 ```
 npm install leankit-client
 ```
 
-### Client usage
+### Quick Start
 
-```
+The first step in using the LeanKit client is to create a new client with your LeanKit credentials.
+
+```javascript
 const LeanKitClient = require( "leankit-client" );
 const auth = {
-	account: "account-name",
+	account: "account-name",	// change these properties to match your account
 	email: "your@email.com",
 	password: "your-p@ssw0rd"
 };
 const client = LeanKitClient( auth );
+// get a list of boards
+client.board.list().then( response => {
+	console.log( response.data );
+} );
+```
 
+### Support for JavaScript Promises, and `async`/`await`
+
+The LeanKit API Client provides a number of functions for retrieving and managing your LeanKit data. Each of these functions return a JavaScript Promises instead of expecting a callback function. Promises provide an easy way to chain commands together.
+
+#### Example: getting a board using promises
+
+```javascript
+// start by getting all the boards
 client.board.list().then( res => {
-	console.log( res );
+	// get the first board's ID
+	const boardId = res.data.boards[ 0 ].id;
+	// retrieve the board
+	return client.board.get( boardId );
+} ).then( boardRes => {
+	const board = boardRes.data;
+	console.log( board );
 } ).catch( err => {
 	console.log( "Error:", err );
 } );
 ```
 
-### Example using `async`/`await`
+Newer versions of the JavaScript language, such as found in Node.js version 8.x or higher, support the use of `async` and `await`, making it even easier to work with functions that return a Promise.
 
-```
+#### Example: getting a board by title using `async`/`await`
+
+```javascript
 const LeanKitClient = require( "leankit-client" );
 
-const getBoards = async ( client ) => {
-	const res = await client.board.list();
-	return res.data.boards;
+const getBoardByTitle = async ( client, title ) => {
+	// search boards by title
+	const res = await client.board.list( { search: title } );
+	if ( res.data.length === 0 ) {
+		return { msg: `Cound not find board with the title: ${ title }` };
+	}
+	// get the board ID
+	const boardId = res.data.boards[ 0 ].id;
+	// retrieve the board by ID
+	const boardRes = await client.board.get( boardId );
+	return boardRes.data;
 };
 
 const main = async () => {
@@ -50,8 +81,8 @@ const main = async () => {
 		password: "your-p@ssw0rd"
 	};
 	const client = LeanKitClient( auth );
-	const boards = await getBoards( client );
-	console.log( boards );
+	const board = await getBoardByTitle( client, "Team Awesome" );
+	console.log( board );
 };
 
 main().then( () => {
@@ -59,7 +90,7 @@ main().then( () => {
 } );
 ```
 
-## API
+## API Reference
 
 The LeanKit Client supports all new `/io` API endpoints, as well as legacy `/kanban/api` endpoints.
 
@@ -211,7 +242,7 @@ For reporting API export configuration options, please refer [Reporting API docu
 
 To use the LeanKit Client behind a proxy server, include a `config` object in the authentication with your proxy server address. For example:
 
-```
+```javascript
 const LeanKitClient = require( "leankit-client" );
 const auth = {
 	account: "account-name",
