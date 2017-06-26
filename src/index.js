@@ -122,7 +122,7 @@ const Client = ( { account, email, password, config } ) => {
 	const parseReplyData = ( error, response, body, resolve, reject ) => { // eslint-disable-line max-statements
 		const parsed = utils.parseBody( body );
 		if ( error ) {
-			const message = response ? response.statusMessage : response.message;
+			const message = response ? response.statusMessage : error.message;
 			const reqErr = new Error( message );
 			reqErr.stack = error.stack;
 			if ( response ) {
