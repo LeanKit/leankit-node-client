@@ -291,6 +291,7 @@ Replace `{your-account}` in the URL with the name of your LeanKit account.
 |:---|:---|:---|
 |`.card.list( { params } )`|`GET /io/card`|Get a list of cards the authenticated user has access to. `params` may include search and paging options. Refer to the API documentation for details.|
 |`.card.get( cardId )`|`GET /io/card/$cardId`|Get a specific card by its ID.|
+|`.card.create( { cardCreateRequest } )`|`POST /io/card`|Creates a new card. Refer to the API documentation for details.|
 |`.card.update( cardId, [ { operations } ] )`|`PATCH /io/card/$cardId`|Modify properties of the given card ID. The array of operations can include adding, replacing, or removing property values. Refer to the API documentation for details.|
 |`.card.destroy( cardId )`|`DELETE /io/card/$cardId`|Delete the specified card.|
 |`.card.comment.list( cardId )`|`GET /io/card/$cardId/comment`|Get a list of card comments.|
