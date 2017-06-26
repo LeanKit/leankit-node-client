@@ -416,4 +416,4 @@ Submit questions or issues [here](https://github.com/leankit/leankit-node-client
 
 ### License
 
-The LeanKit Node Client is licensed under [MIT](http://www.opensource.org/licenses/mit-license.php). Refer to [license.txt](https://github.com/LeanKit/leankit-node-client/blob/master/License.txt) for more information.
+The LeanKit Node Client is licensed under [MIT](http://www.opensource.org/licenses/mit-license.php). Refer to the [LICENSE](https://github.com/reverentgeek/leankit-node-client/blob/support-api-v2/LICENSE)file for more information.
