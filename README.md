@@ -102,6 +102,143 @@ main().then( () => {
 } );
 ```
 
+## Examples
+
+### Create a new card
+
+```javascript
+const createCard = async ( client, boardId, cardTitle, cardDescription, cardTypeName, laneName ) => {
+    try {
+        // get the board for identifiers like card types, lanes, users, etc.
+        const boardRes = await client.board.get( boardId );
+        const board = boardRes.data;
+        // find the card type by name
+        const cardType = board.cardTypes.find( x => x.name === cardTypeName );
+        // find the lane by name
+        const lane = board.lanes.find( x => x.name === laneName );
+        // create the card
+        const cardCreateRes = await client.card.create( {
+            boardId,
+            title: cardTitle,
+            description: cardDescription,
+            typeId: cardType.id,
+            laneId: lane.id
+        } );
+        // return the new card id
+        return cardCreateRes.data;
+    } catch ( err ) {
+        console.log( err );
+        return null;
+    }
+};
+```
+
+### Update card title
+
+```javascript
+const updateCardTitle = async ( client, cardId, newTitle ) => {
+    // replace the existing title
+    const updateCardRes = await client.card.update( cardId, [ {
+        op: "replace",
+        path: "/title",
+        value: newTitle
+    } ] );
+    // return the updated card object
+    return updateCardRes.data;
+};
+```
+
+### Add a tag to a card
+
+This appends the tag to the card. Any existing tags are preserved.
+
+```javascript
+const addTagToCard = async ( client, cardId, tag ) => {
+    // replace the existing title
+    const updateCardRes = await client.card.update( cardId, [ {
+        op: "add",
+        path: "/tags/-",
+        value: tag
+    } ] );
+    // return the updated card object
+    return updateCardRes.data;
+};
+```
+
+### Add file attachment to a card
+
+```javascript
+const fs = require( "fs" );
+const path = require( "path" );
+
+const addAttachmentToCard = async ( client, cardId, filePath, description ) => {
+    try {
+        // create a readable stream of the given file
+        const fileStream = fs.createReadStream( filePath );
+        // get the base filename without the directory or path (e.g. 'QuarterlyResults.pdf')
+        const fileName = path.basename( filePath );
+        const fileData = {
+            file: fileStream,
+            name: fileName,
+            description
+        };
+        const createRes = await client.card.attachment.create( cardId, fileData );
+        return createRes.data;
+    } catch ( err ) {
+        console.log( err );
+    }
+};
+```
+
+### Create a new board from a template
+
+```javascript
+const createNewBoardFromTemplate = async ( client, categoryName, templateName, newBoardTitle, description ) => {
+    try {
+        // get a list of all the templates
+        const templateList = await client.template.list();
+        // find the category by name
+        const category = templateList.data.categories.find( x => x.name === categoryName );
+        // find the template by name
+        const template = category.find( x => x.name === templateName );
+        // create the board
+        const createBoard = await client.board.create( {
+            templateId: template.id,
+            title: newBoardTitle,
+            description
+        } );
+        return createBoard.data;
+    } catch ( err ) {
+        console.log( err );
+    }
+};
+```
+
+### Export Cards to CSV file using the Advanced Reporting API
+
+_**Note:** This is a premium feature that may not be available, depending on your subscription level._
+
+```javascript
+const exportCardsByBoardId = async ( client, boardId, filePath ) => {
+    try {
+        const createTokenResponse = await client.reporting.auth.token();
+        const token = createTokenResponse.data.token;
+        const cardExportRes = await client.reporting.export.cards( {
+            token,
+            stream: fs.createWriteStream( filePath ),
+            config: {
+                format: "csv",        // optional format ( csv, tab, json )
+                quotedString: false,  // optional, quotes will only be used when necessary
+                boardId               // optional board id. If no boardId or boardId = 0, all cards will be returned
+            }
+        } );
+        return cardExportRes.status === 200;
+    } catch ( err ) {
+        console.log( err );
+    }
+};
+```
+
 ## API Reference
 
 The LeanKit Client supports all new `/io` API endpoints, as well as legacy `/kanban/api` endpoints.
