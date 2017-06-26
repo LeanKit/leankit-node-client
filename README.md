@@ -311,6 +311,8 @@ Replace `{your-account}` in the URL with the name of your LeanKit account.
 
 #### Reporting
 
+_**Note:** This is a premium feature that may not be available, depending on your subscription level._
+
 For reporting API export configuration options, please refer [Reporting API documentation](https://support.leankit.com/hc/en-us/articles/115000323287-Advanced-Reporting-API-Overview).
 
 |Method|API endpoint|Description|
