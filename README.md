@@ -219,6 +219,8 @@ const createNewBoardFromTemplate = async ( client, categoryName, templateName, n
 _**Note:** This is a premium feature that may not be available, depending on your subscription level._
 
 ```javascript
+const fs = require( "fs" );
+
 const exportCardsByBoardId = async ( client, boardId, filePath ) => {
     try {
         const createTokenResponse = await client.reporting.auth.token();
