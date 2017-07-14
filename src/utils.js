@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
-const fs = require( "fs" );
-const path = require( "path" );
+const pkg = require( "../package.json" );
 
 const buildUrl = account => {
 	let url = "";
@@ -20,14 +19,8 @@ const buildUrl = account => {
 };
 
 const getUserAgent = () => {
-	const pkgfilepath = path.resolve( __dirname, "../", "package.json" );
-	if ( fs.existsSync( pkgfilepath ) ) {
-		const pkg = JSON.parse( fs.readFileSync( pkgfilepath, "utf-8" ) );
-		return `leankit-node-client/${ pkg.version }`;
-	}
-	return "leankit-node-client/2.0.0";
+	return `leankit-node-client/${ pkg.version }`;
 };
-
 
 const getPropertyValue = ( obj, prop, def = null ) => {
 	for ( const k in obj ) {
@@ -38,6 +31,7 @@ const getPropertyValue = ( obj, prop, def = null ) => {
 	return def;
 };
 
+
 const removeProperties = ( obj, props ) => {
 	for ( let i = 0; i < props.length; i++ ) {
 		for ( const k in obj ) {
@@ -46,6 +40,33 @@ const removeProperties = ( obj, props ) => {
 			}
 		}
 	}
+};
+
+const buildDefaultConfig = ( account, token, email, password, config ) => {
+	config = config || { headers: {} };
+	if ( !config.headers ) {
+		config.headers = {};
+	}
+	const userAgent = getPropertyValue( config.headers, "User-Agent", getUserAgent() );
+	removeProperties( config.headers, [ "User-Agent", "Content-Type", "Accept" ] );
+	const proxy = config.proxy || null;
+	const defaultHeaders = {
+		Accept: "application/json",
+		"Content-Type": "application/json",
+		"User-Agent": userAgent
+	};
+	const headers = Object.assign( {}, config.headers, defaultHeaders );
+	const auth = token ? { bearer: token } : { username: email, password };
+	const defaults = {
+		auth,
+		baseUrl: buildUrl( account ),
+		headers
+	};
+
+	if ( proxy ) {
+		defaults.proxy = proxy;
+	}
+	return defaults;
 };
 
 const checkLegacyPath = urlPath => {
@@ -113,6 +134,7 @@ const status = {
 
 module.exports = {
 	buildUrl,
+	buildDefaultConfig,
 	getUserAgent,
 	getPropertyValue,
 	removeProperties,
