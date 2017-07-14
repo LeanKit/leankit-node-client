@@ -49,6 +49,7 @@
     "prepublish": "npm run lint",
     "pretest": "npm run lint",
     "test": "mocha -r ./spec/setup --reporter spec ./spec/*.spec.js",
+    "test:watch": "npm run test -- -w",
     "scratch-tests": "npm run lint && node ./scratch"
   },
   "repository": {

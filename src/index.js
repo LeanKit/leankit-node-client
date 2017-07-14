@@ -5,35 +5,6 @@ const apiFactory = require( "./api" );
 const v1ApiFactory = require( "./api.v1" );
 const legacy = require( "./legacy" );
 
-const buildDefaultConfig = ( account, email, password, config ) => {
-	config = config || { headers: {} };
-	if ( !config.headers ) {
-		config.headers = {};
-	}
-	const userAgent = utils.getPropertyValue( config.headers, "User-Agent", utils.getUserAgent() );
-	utils.removeProperties( config.headers, [ "User-Agent", "Content-Type", "Accept" ] );
-	const proxy = config.proxy || null;
-	const defaultHeaders = {
-		Accept: "application/json",
-		"Content-Type": "application/json",
-		"User-Agent": userAgent
-	};
-	const headers = Object.assign( {}, config.headers, defaultHeaders );
-	const defaults = {
-		auth: {
-			username: email,
-			password
-		},
-		baseUrl: utils.buildUrl( account ),
-		headers
-	};
-
-	if ( proxy ) {
-		defaults.proxy = proxy;
-	}
-	return defaults;
-};
-
 const rejectError = ( err, res, body, reject ) => {
 	const message = res ? res.statusMessage : err.message;
 	const reqErr = new Error( message );
@@ -54,8 +25,8 @@ const rejectError = ( err, res, body, reject ) => {
 	return reject( reqErr );
 };
 
-const Client = ( { account, email, password, config } ) => {
-	const defaults = buildDefaultConfig( account, email, password, config );
+const Client = ( { account, token, email, password, config } ) => {
+	const defaults = utils.buildDefaultConfig( account, token, email, password, config );
 	const legacyHandler = legacy( req, defaults );
 
 	const request = ( options, stream = null ) => {

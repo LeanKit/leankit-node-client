@@ -23,7 +23,7 @@ The first step in using the LeanKit client is to create a new client with your L
 const LeanKitClient = require( "leankit-client" );
 const auth = {
     account: "account-name",    // change these properties to match your account
-    email: "your@email.com",
+    email: "your@email.com",    // for token auth, see below
     password: "your-p@ssw0rd"
 };
 // create a client with the account credentials
@@ -33,6 +33,23 @@ const client = LeanKitClient( auth );
 client.board.list().then( response => {
     console.log( response.data );
 } );
+```
+
+### Authentication
+
+The LeanKit API Client supports both "Basic" and "Bearer" authentication.
+* provide a valid email and password for basic authentication
+* provide a valid token to use bearer authentication
+
+For most production uses, it's recommended that you use token authentication so that you don't need to worry about protecting your password. See the API section [Auth Tokens](#auth-tokens) for information on how to create and manage auth tokens.
+
+Using a token is simple:
+```javascript
+const auth = {
+	account: "account-name",
+	token: "2a0ec41e4fca6a10727a33je4f409545870c0ce199fd8cde287a027acdf671d73da3f5af1ee983441d1993dc3a2181302690885c0b46692e39b6c9e29bd132eb"
+}
+const client = LeanKitClient( auth );
 ```
 
 ### Support for JavaScript Promises, and `async`/`await`
