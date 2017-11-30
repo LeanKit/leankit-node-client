@@ -8,6 +8,7 @@ const task = require( "./task" );
 const template = require( "./template" );
 const user = require( "./user" );
 const reporting = require( "./reporting" );
+const scim = require( "./scim" );
 
 module.exports = ( api, request, { accountName, email, password } ) => {
 	account( api, request );
@@ -19,5 +20,6 @@ module.exports = ( api, request, { accountName, email, password } ) => {
 	task( api, request );
 	template( api, request );
 	user( api, request );
+	scim( api, request );
 	reporting( api, request, { accountName, email, password } );
 };
