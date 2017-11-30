@@ -1,5 +1,5 @@
 module.exports = ( api, request ) => {
-	api.board = { customFields: {} };
+	api.board = { customFields: {}, roles: {} };
 	api.board.list = ( params = {} ) => {
 		return request( {
 			url: "/io/board",
@@ -35,6 +35,14 @@ module.exports = ( api, request ) => {
 			url: "/io/board",
 			method: "post",
 			data: boardCreateRequest
+		} );
+	};
+
+	api.board.roles.modify = ( boardId, operations ) => {
+		return request( {
+			url: `/io/board/${ boardId }/roles`,
+			method: "patch",
+			data: operations
 		} );
 	};
 };

@@ -14,7 +14,7 @@
     }
   ],
   "license": "SEE LICENSE IN https://github.com/LeanKit/leankit-node-client/blob/master/LICENSE",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "homepage": "https://github.com/LeanKit/leankit-node-client/",
   "bugs": {
     "url": "https://github.com/LeanKit/leankit-node-client/issues",
@@ -38,8 +38,8 @@
   "devDependencies": {
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
-    "eslint": "^3.0.0",
-    "eslint-config-leankit": "^3.0.0",
+    "eslint": "^4.12.1",
+    "eslint-config-leankit": "^4.3.0",
     "lodash": "^4.17.4",
     "mocha": "^3.4.2",
     "nock": "^9.0.10"
