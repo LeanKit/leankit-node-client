@@ -37,4 +37,12 @@ module.exports = ( api, request ) => {
 			data: boardCreateRequest
 		} );
 	};
+
+	api.board.roles.modify = ( boardId, operations ) => {
+		return request( {
+			url: `/io/board/${ boardId }/roles`,
+			method: "patch",
+			data: operations
+		} );
+	};
 };
