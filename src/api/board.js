@@ -1,5 +1,5 @@
 module.exports = ( api, request ) => {
-	api.board = { customFields: {} };
+	api.board = { customFields: {}, roles: {} };
 	api.board.list = ( params = {} ) => {
 		return request( {
 			url: "/io/board",
