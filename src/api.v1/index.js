@@ -4,7 +4,7 @@ const cardComment = require( "./card.comment" );
 const cardAttachment = require( "./card.attachment" );
 const task = require( "./task" );
 
-module.exports = ( api, request, { accountName, email, password } ) => {
+module.exports = ( api, request ) => {
 	api.v1 = {};
 	board( api.v1, request );
 	card( api.v1, request );
