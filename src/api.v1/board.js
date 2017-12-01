@@ -1,6 +1,6 @@
 module.exports = ( api, request ) => {
 	api.board = { since: {} };
-	api.board.list = ( params = {} ) => {
+	api.board.list = () => {
 		return request( { url: "boards" } );
 	};
 

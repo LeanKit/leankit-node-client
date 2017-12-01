@@ -97,7 +97,7 @@ module.exports = ( api, request ) => {
 	};
 
 	api.card.list = {};
-	api.card.list.recent = ( boardId, callback ) => {
+	api.card.list.recent = boardId => {
 		return request( { url: `board/${ boardId }/listnewcards` } );
 	};
 
