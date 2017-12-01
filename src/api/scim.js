@@ -1,6 +1,6 @@
 module.exports = ( api, request ) => {
 	api.scim = { user: {} };
-	api.user.list = ( params = {} ) => {
+	api.scim.user.list = ( params = {} ) => {
 		return request( {
 			url: "/io/scim/v1/users",
 			method: "get",
@@ -8,7 +8,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.user.create = userCreateRequest => {
+	api.scim.user.create = userCreateRequest => {
 		return request( {
 			url: "/io/scim/v1/users",
 			method: "post",
@@ -16,7 +16,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.user.update = userUpdateRequest => {
+	api.scim.user.update = userUpdateRequest => {
 		return request( {
 			url: `/io/scim/v1/users/${ userUpdateRequest.id }`,
 			method: "patch",
@@ -24,7 +24,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.user.replace = userUpdateRequest => {
+	api.scim.user.replace = userUpdateRequest => {
 		return request( {
 			url: `/io/scim/v1/users/${ userUpdateRequest.id }`,
 			method: "put",
@@ -32,7 +32,7 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
-	api.user.destroy = userId => {
+	api.scim.user.destroy = userId => {
 		return request( {
 			url: `/io/scim/v1/users/${ userId }`,
 			method: "delete"
