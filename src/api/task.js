@@ -13,6 +13,13 @@ module.exports = ( api, request ) => {
 		} );
 	};
 
+	api.task.list = cardId => {
+		return request( {
+			url: `/io/card/${ cardId }/tasks`,
+			method: "GET"
+		} );
+	};
+
 	api.task.get = ( cardId, taskId ) => {
 		return request( {
 			url: `/io/card/${ cardId }/tasks/${ taskId }`,
