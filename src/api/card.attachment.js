@@ -13,7 +13,7 @@ module.exports = ( api, request ) => {
 	api.card.attachment.create = ( cardId, { name, description, file } ) => {
 		const formData = {
 			Id: 0,
-			File: file,
+			file: file,
 			Description: description,
 			FileName: name
 		};
